@@ -1898,7 +1898,16 @@ var SYNC={base:null,remote:{},dirty:new Set(),timer:null,ready:false,pushing:fal
 const CORE_KEYS=['tasks','foods','bw','habits','tg','goals','guides','xlib'];
 const SYNC_TXT={local:['Sur cet appareil uniquement',''],login:['Se connecter','gold','Connecte-toi pour retrouver tes données sur tous tes appareils'],busy:['Synchronisation…','gold'],ok:['Synchronisé','ok'],err:['Hors ligne · modifications gardées ici','red'],slow:['Connexion lente · données locales','gold']};
 let syncState='local';
-function setSync(s){syncState=s;const el=$('#sync');if(!el)return;const[t,c,ti]=SYNC_TXT[s];el.className='sync '+c+(s=='login'?' need':'');el.title=ti||t;el.setAttribute('aria-label',ti||t);el.innerHTML=(s=='login'?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>':'<i></i>')+`<span class="lbl">${t}</span>`}
+let syncErr=null;
+function errInfo(e){if(!e)return'';const c=String(e.code||'').replace('firestore/',''),m=String(e.message||e);
+  if(c=='permission-denied'||/permission/i.test(m))return'Accès refusé par Firebase : les règles Firestore bloquent la lecture ou l’écriture (onglet Règles, puis Publier).';
+  if(c=='not-found'||/does not exist|NOT_FOUND/i.test(m))return'Base Firestore introuvable : la base « (default) » n’existe pas encore dans le projet.';
+  if(c=='failed-precondition')return'Firestore n’est pas prêt (base en cours de création ou mode incompatible). Réessaie dans quelques minutes.';
+  if(c=='unauthenticated')return'Session expirée : déconnecte-toi puis reconnecte-toi.';
+  if(c=='unavailable'||!navigator.onLine)return'Serveur Firebase injoignable (réseau ou blocage du navigateur).';
+  return'Erreur Firebase'+(c?' ('+c+')':'')+' : '+m.slice(0,200)}
+const failSync=e=>{syncErr=e||syncErr;try{console.warn('Synchro :',e)}catch(x){}setSync('err')};
+function setSync(s){if(s=='ok')syncErr=null;syncState=s;const el=$('#sync');if(!el)return;const[t,c,ti]=SYNC_TXT[s];el.className='sync '+c+(s=='login'?' need':'');el.title=ti||t;el.setAttribute('aria-label',ti||t);el.innerHTML=(s=='login'?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>':'<i></i>')+`<span class="lbl">${t}</span>`}
 function syncParts(){const p={core:{}};CORE_KEYS.forEach(k=>p.core[k]=S[k]);
   Object.entries(S.logs).forEach(([d,l])=>{if(active(l)||l.title||l.rp||SYNC.remote['days/'+d]!==undefined)p['days/'+d]=l});
   S.sessions.forEach(z=>p['sessions/'+z.id]=z);
@@ -1916,7 +1925,7 @@ async function syncPush(){if(SYNC.pushing){SYNC.again=true;return}SYNC.pushing=t
       else{if(j.length>250000)toast('Données trop volumineuses pour la synchro : exporte une sauvegarde.');await refOf(k).set({json:j,t:Date.now()});SYNC.remote[k]=j}
       SYNC.dirty.delete(k)}
     saveBase();setSync(SYNC.dirty.size?'busy':'ok')}
-  catch(e){saveBase();setSync('err');if(e&&(e.code=='quota_exceeded'||e.code=='resource-exhausted'))toast('Stockage en ligne plein : exporte une sauvegarde.');clearTimeout(SYNC.timer);SYNC.timer=setTimeout(syncPush,8000)}
+  catch(e){saveBase();failSync(e);if(e&&(e.code=='quota_exceeded'||e.code=='resource-exhausted'))toast('Stockage en ligne plein : exporte une sauvegarde.');clearTimeout(SYNC.timer);SYNC.timer=setTimeout(syncPush,8000)}
   finally{SYNC.pushing=false;if(SYNC.again){SYNC.again=false;syncPush()}}}
 function setLocal(k,j){const v=j==null?undefined:JSON.parse(j);
   if(k=='core'){if(v)CORE_KEYS.forEach(x=>{if(v[x]!==undefined)S[x]=v[x]})}
@@ -1959,11 +1968,11 @@ async function syncStart(base){
     SYNC.remote=R;saveBase();clearTimeout(slow);SYNC.ready=true;
     if(editing())SYNC.pending=true;else render(); /* render → save → envoie ce qui manque en ligne */
     if(!SYNC.dirty.size)setSync('ok');
-    const err=()=>setSync('err');
+    const err=e=>failSync(e);
     base.onSnapshot(s=>{if(s.metadata.fromCache||s.metadata.hasPendingWrites)return;if(applyDoc('core',s.exists?s.data():null))remoteChanged()},err);
     ['days','sessions'].forEach(col=>base.collection(col).onSnapshot(q=>{let ch=false;q.docChanges().forEach(x=>{const m=x.doc.metadata;if(m.fromCache||m.hasPendingWrites)return;if(applyDoc(col+'/'+x.doc.id,x.type=='removed'?null:x.doc.data()))ch=true});if(ch)remoteChanged()},err));
     return true
-  }catch(e){clearTimeout(slow);setSync('err');return false}}
+  }catch(e){clearTimeout(slow);failSync(e);return false}}
 
 async function syncInit(){
   if(window.claude&&typeof window.claude.use=='function'){SYNC.mode='claude';setSync('busy');
@@ -1973,7 +1982,7 @@ async function syncInit(){
   SYNC.mode='fb';
   try{const F=await fbLoad();
     F.au.onAuthStateChanged(F.auth,u=>{if(!u){if(!SYNC.ready)setSync('login');return}fbStart(u)})}
-  catch(e){setSync('err');clearTimeout(SYNC.retry);SYNC.retry=setTimeout(syncInit,20000)}}
+  catch(e){failSync(e);clearTimeout(SYNC.retry);SYNC.retry=setTimeout(syncInit,20000)}}
 async function fbStart(u){if(SYNC.ready||SYNC.starting)return;SYNC.starting=true;SYNC.uid=u.uid;
   const ok=await syncStart(FB.doc('data/users/'+u.uid+'/app'));SYNC.starting=false;
   if(!ok){clearTimeout(SYNC.retry);SYNC.retry=setTimeout(()=>fbStart(u),20000)}}
@@ -1983,7 +1992,7 @@ addEventListener('online',()=>{if(SYNC.ready||SYNC.mode!='fb')return;if(!FB)sync
 const fbErr=x=>{const c=x&&x.code||'';return/email-already-in-use/.test(c)?'Un compte existe déjà avec cet e-mail : connecte-toi.':/weak-password/.test(c)?'Mot de passe trop faible : 6 caractères minimum.':/operation-not-allowed|admin-restricted/.test(c)?'La création de compte n’est pas activée pour le moment.':/invalid-credential|wrong-password|user-not-found|invalid-email/.test(c)?'E-mail ou mot de passe incorrect.':/too-many-requests/.test(c)?'Trop d’essais : réessaie dans quelques minutes.':/network/.test(c)||!navigator.onLine?'Pas de connexion internet pour le moment.':'Connexion impossible, réessaie.'};
 let acctMode='login';
 function acctDlg(){const u=FB&&FB.auth.currentUser,top=`<div class="dlg-top"><h2>Synchronisation</h2><button class="btn quiet icon sm" data-a="cdlg" aria-label="Fermer">${ICON.x}</button></div>`;
-  if(SYNC.mode=='claude'||u){dlg.innerHTML=top+`<p class="mu sm">${u?'Connecté avec <b>'+esc(u.email||'')+'</b>. ':''}Tes saisies sont enregistrées en ligne et apparaissent sur tous tes appareils connectés.</p><p style="margin-top:12px"><span class="sync ${SYNC_TXT[syncState][1]}"><i></i>${SYNC_TXT[syncState][0]}</span></p><div class="dlg-actions">${u?'<button class="btn ghost" data-a="logout" style="margin-right:auto">Se déconnecter</button>':''}<button class="btn" data-a="cdlg">Fermer</button></div>`}
+  if(SYNC.mode=='claude'||u){dlg.innerHTML=top+`<p class="mu sm">${u?'Connecté avec <b>'+esc(u.email||'')+'</b>. ':''}Tes saisies sont enregistrées en ligne et apparaissent sur tous tes appareils connectés.</p><p style="margin-top:12px"><span class="sync ${SYNC_TXT[syncState][1]}"><i></i>${SYNC_TXT[syncState][0]}</span></p>${syncState=='err'&&syncErr?`<p class="sm" style="margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--red-soft);color:var(--ink)"><b>Détail :</b> ${esc(errInfo(syncErr))}</p>`:''}<div class="dlg-actions">${u?'<button class="btn ghost" data-a="logout" style="margin-right:auto">Se déconnecter</button>':''}<button class="btn" data-a="cdlg">Fermer</button></div>`}
   else if(acctMode=='signup'){dlg.innerHTML=top+`<p class="mu sm">Crée ton compte pour retrouver tes données sur tous tes appareils. Ce que tu as déjà saisi sur cet appareil sera enregistré dans ce compte.</p>
 <label class="field" style="margin-top:14px"><span>E-mail</span><input id="lg-e" type="email" autocomplete="username" autocapitalize="off" spellcheck="false" inputmode="email"></label>
 <label class="field" style="margin-top:10px"><span>Mot de passe (6 caractères minimum)</span><input id="lg-p" type="password" autocomplete="new-password"></label>
