@@ -1078,15 +1078,8 @@ const FOODS=(()=>{const m=new Map();let cat='';FOOD_SRC.trim().split('\n').forEa
 const KEY='lpos-v4';
 let S,tab='today',cur=TODAY,mo=TODAY.slice(0,7),chEx='',D={},gi=0,pick=null,addSlot=null,addUnit=null,resIdx=0;
 
-function seed(){const m='2026-11-16',T=(t,s,e,cat,pr,rec)=>({id:uid(),t,date:m,s,e,cat,sp:/volley/i.test(t)?'Volley':'Muscu',pr,rec,excl:[],done:{}});
-return{tasks:[T('Travail (CDI)','09:00','18:00','work',1,[1,2,3,5]),T('Télétravail','09:00','18:00','work',1,[4]),T('Eau tiède + citron + pincée de sel','07:30','07:40','nutri',2,[0,1,2,3,4,5,6]),T('Déjeuner','13:00','13:30','nutri',1,[1,2,3,4,5]),T('Marche digestive ou rester debout','13:30','14:00','nutri',2,[1,2,3,4,5]),T('Muscu – Pull','18:30','19:45','sport',2,[2]),T('Muscu – Upper','10:00','11:30','sport',2,[6]),T('Muscu – Lower','10:00','11:30','sport',2,[0]),T('Volley','20:30','22:30','sport',1,[3]),T('Volley (optionnel)','20:30','22:30','sport',3,[5]),T('Mobilité / étirements','19:00','19:30','repos',3,[1,4]),T('Lecture : 10 pages','22:45','23:00','perso',2,[0,1,2,3,4,5,6])],
-logs:{},foods:[],bw:{'2026-11-21':61.5},
-habits:['Eau + citron/sel au réveil','Ordre du repas : Légumes → Protéines → Glucides','Pas d’eau pendant le repas et 20 min après','Compléments : Collagène / Créatine / Magnésium','Douche tiède terminée à l’eau fraîche'],
-tg:{w:2750,pg:10,st:10000,caf:250,slp:85,sh:7.5,sp:{...MACRO_LOCK.sp},off:{...MACRO_LOCK.off}},
-goals:[{t:'Mésocycle 1',n:'Recomp propre + consolidation pec droit',d:'2026-11-01',e:'2026-12-23'},{t:'Voyage en Chine',n:'Pause active, maintien & plaisir',d:'2026-12-24',e:'2027-01-03'},{t:'Mésocycle 2',n:'Sèche vers 10–12 % de masse grasse (Baki / Ippo) + reprise du running',d:'2027-01-04',e:'2027-03-31'},{t:'Mésocycle 3',n:'Maintien sec + préparation spécifique Hyrox 2027',d:'2027-04-01',e:''}],
-guides:[{t:'Baki / Ippo & Hyrox',b:['Surcharge progressive propre : +1 rep ou +1 à 2,5 kg quand la technique reste parfaite','Ratio force/poids : vise des tractions et des dips de plus en plus lestés','Pec droit : trajectoires guidées + 1 à 2 reps de marge sur les dips','Grip : dead hang et farmer’s walk','10 000–15 000 pas/jour pour sécher sans épuiser le système nerveux']},{t:'Nutrition & glycémie',b:['2 g/kg de protéines par jour (≈ 125–140 g)','Ordre du repas : fibres → protéines → glucides','Pas d’eau pendant le repas ni 20 min après','Marche digestive ou rester debout après le repas','Glucides autour de l’effort : dattes/banane avant, riz/patate douce après','Qualité : poulet Label Rouge ou Bleu-Blanc-Cœur','Chocolat noir 85 % : origine Afrique de l’Ouest pour limiter le cadmium']},{t:'Sommeil > 85 & récupération',b:['Pas de caféine après 14h–15h','Dîner digeste (poisson blanc si tardif)','Caséine ou skyr juste après le dîner plutôt qu’au coucher','Douche tiède terminée à l’eau fraîche','Magnésium le soir, filtre lumière bleue','10 pages sur liseuse avant de dormir']},{t:'Santé, peau & tendons',b:['Collagène + vitamine C/citron 30–45 min avant la séance','Eau tiède + sel/citron au réveil','Eau de coco froide après l’effort (potassium)','Peau : douche rapide après le sport, eau fraîche, vêtements respirants']},{t:'Vie perso & productivité',b:['Pas de téléphone au réveil, lumière naturelle le matin','Alterner assis/debout au bureau','Filtre lumière bleue du PC à 70 %','10 pages de lecture par jour','Adapter la séance à la vraie vie, sans culpabiliser']}],
-xlib:[],
-sessions:[{id:uid(),date:'2026-11-21',type:'Upper',sp:'Muscu',pec:'RAS',note:'',ex:[SX('Tractions pronation','lest',[{l:10,pdc:false,r:7},{l:10,pdc:false,r:6}],'Record : +20 kg × 5'),SX('Chest Press Hammer Strength (plat)','charge',[{w:45,r:8},{w:45,r:8},{w:42.5,r:8},{w:37.5,r:7}]),SX('Rowing T-Bar support','charge',[{w:40,r:8},{w:35,r:8}],'+ 4 Kelso shrugs'),SX('Dips','lest',[{l:0,pdc:true,r:15}],'Record : +40 kg × 6–8'),SX('Vis-à-vis poulie milieu','charge',[{w:5,r:12},{w:5,r:12},{w:5,r:12}]),SX('Élévations latérales poulie','charge',[{w:5,r:15},{w:5,r:15},{w:5,r:12}]),SX('Triceps barre V poulie','charge',[{w:25,r:12},{w:25,r:12},{w:25,r:12}]),SX('Curl incliné haltères','charge',[{w:10,r:10},{w:10,r:10},{w:10,r:10}]),SX('Dead Hang','temps',[{t:32,l:0},{t:33,l:0}])]}]}}
+/* App vide pour un nouvel appareil ou un nouveau compte (les données existantes ne passent jamais par ici) */
+function seed(){return{tasks:[],logs:{},foods:[],bw:{},habits:[],tg:{w:2750,pg:10,st:10000,caf:250,slp:85,sh:7.5,sp:{...MACRO_LOCK.sp},off:{...MACRO_LOCK.off}},goals:[],guides:[],xlib:[],sessions:[]}}
 
 /* ===================== PLANNING DE LA SEMAINE =====================
    Mis à jour chaque semaine. Changer « v » pour que l’app applique
@@ -1116,10 +1109,14 @@ const PLANNING={
     '2026-11-29':{title:'Pull lesté + bilan hebdo',tr:1}
   }
 };
-function applyPlanning(){
-  const P=PLANNING;if(!P||S.planV===P.v)return;
+/* Le bloc ci-dessus n’est plus appliqué automatiquement : chaque utilisateur importe son propre
+   planning (bouton « Importer un planning » de la vue Semaine). applyPlanning(P) applique un planning
+   au même format ; il remplace les créneaux importés des semaines qu’il couvre (lundi → dimanche). */
+function planRange(P){const ds=[...P.tasks.map(x=>x.date),...Object.keys(P.days||{}),...Object.values(P.excl||{}).flat()].filter(Boolean).sort();return[wkStart(ds[0]),add(wkStart(ds[ds.length-1]),6)]}
+function applyPlanning(P){
+  if(!P)return;const[d0,d1]=planRange(P),inR=x=>x.date>=d0&&x.date<=d1;
   const same=(a,b)=>a.t==b.t&&a.date==b.date&&a.s==b.s;
-  const old=S.tasks.filter(x=>x.plan);S.tasks=S.tasks.filter(x=>!x.plan);
+  const old=S.tasks.filter(x=>x.plan&&inR(x));S.tasks=S.tasks.filter(x=>!(x.plan&&inR(x)));
   P.tasks.forEach(n=>{if(S.tasks.some(x=>same(x,n)))return;const o=old.find(x=>same(x,n));
     S.tasks.push({id:uid(),cat:'sport',sp:'Muscu',pr:2,rec:null,excl:[],...n,done:o&&o.done||{},plan:true})});
   Object.entries(P.excl||{}).forEach(([t,ds])=>S.tasks.filter(x=>x.rec&&x.t==t).forEach(x=>{x.excl=[...new Set([...(x.excl||[]),...ds])]}));
@@ -1144,7 +1141,6 @@ function migrate(){
   S.xlib=S.xlib||[];const known=n=>EXO.some(x=>x.n==n)||S.xlib.some(x=>x.n==n);
   (S.lib||[]).map(n=>EX_ALIAS[n]||n).forEach(n=>{if(!known(n))S.xlib.push({n,m:'Autre',e:'aut',mode:exMode(n)})});delete S.lib;
   S.sessions.forEach(z=>z.ex.forEach(e=>{if(!known(e.n))S.xlib.push({n:e.n,m:'Autre',e:'aut',mode:e.mode||exMode(e.n)})}));
-  applyPlanning();
 }
 try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 if(!S||!S.tasks)S=seed();
@@ -1503,7 +1499,7 @@ function vWeek(){
     ['Habitudes cochées',A.hbT,A.hbD,'']];
   const supE=Object.entries(A.sup);
   return`
-<div class="datebar"><button class="btn ghost icon" data-a="nav" data-n="-7" aria-label="Semaine précédente">${ICON.prev}</button><span class="when">Semaine du ${dMed(w0)}</span><button class="btn ghost icon" data-a="nav" data-n="7" aria-label="Semaine suivante">${ICON.next}</button><span class="grow"></span><button class="btn ghost sm" data-a="tplw">Appliquer un modèle</button><button class="btn sm" data-a="new" data-d="${inW?cur:w0}">Ajouter un créneau</button></div>
+<div class="datebar"><button class="btn ghost icon" data-a="nav" data-n="-7" aria-label="Semaine précédente">${ICON.prev}</button><span class="when">Semaine du ${dMed(w0)}</span><button class="btn ghost icon" data-a="nav" data-n="7" aria-label="Semaine suivante">${ICON.next}</button><span class="grow"></span><button class="btn ghost sm" data-a="plan">Importer un planning</button><button class="btn ghost sm" data-a="tplw">Appliquer un modèle</button><button class="btn sm" data-a="new" data-d="${inW?cur:w0}">Ajouter un créneau</button></div>
 <div class="calwrap"><div class="gcal">
   <div class="ghead"><div></div>${ds.map(d=>`<div class="${d==TODAY?'today':''}">${DJ[pd(d).getDay()]}<small>${+d.slice(8)}</small></div>`).join('')}</div>
   <div class="gbody"><div style="position:relative;height:${GH}px">${hrsL.map(h=>`<span class="hl" style="top:${(h*60-H0)/60*HH-7}px">${h}h</span>`).join('')}</div>
@@ -1806,6 +1802,92 @@ document.addEventListener('contextmenu',e=>{if(e.target.closest('.ev'))e.prevent
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{if(!S.theme)applyTheme()});
 
 
+
+/* ===== Import d’un planning (format du bloc PLANNING) ===== */
+const planWeek=()=>{const w0=wkStart(cur);return[w0,add(w0,6)]};
+function planPrompt(){const[w0,w1]=planWeek(),fr=d=>DN[pd(d).getDay()]+' '+dMed(d)+' ('+d+')';
+  const rec=S.tasks.filter(x=>x.rec&&x.rec.length).map(x=>`- « ${x.t} » : ${[1,2,3,4,5,6,0].filter(i=>x.rec.includes(i)).map(i=>DN[i].toLowerCase()).join(', ')}, ${x.s}–${x.e}`);
+  return`Agent : Planificateur hebdo Life & Performance
+
+Tu prépares mon planning de la semaine pour l’app « Life & Performance ».
+Semaine concernée : du ${fr(w0)} au ${fr(w1)}.
+
+Réponds UNIQUEMENT avec un bloc JSON valide, sans aucun texte avant ou après, exactement dans ce format :
+{
+  "tasks": [
+    {"t": "Muscu – Upper", "date": "${w0}", "s": "18:30", "e": "19:45", "cat": "sport", "sp": "Muscu"}
+  ],
+  "excl": {
+    "Titre exact d’un créneau habituel": ["${w0}"]
+  },
+  "days": {
+    "${w0}": {"title": "Upper · volume", "tr": 1}
+  }
+}
+
+Règles :
+- "tasks" : créneaux ponctuels de la semaine. "t" = titre court, "date" au format AAAA-MM-JJ, "s" (début) et "e" (fin) au format HH:MM sur 24 h.
+- "cat" : une valeur parmi ${Object.entries(CATS).map(([k,v])=>`"${k}" (${v[0]})`).join(', ')}.
+- "sp" : discipline, seulement pour "cat": "sport" ou "repos", parmi ${DISC.map(x=>'"'+x+'"').join(', ')}.
+- "excl" : masque un de mes créneaux habituels certains jours. Utilise uniquement les titres exacts de la liste ci-dessous, sinon laisse {}.
+- "days" : pour chaque jour, "title" = titre court du jour, "tr" = 1 si jour d’entraînement, 0 si repos sport.
+- N’invente pas de créneaux que je n’ai pas demandés. Toutes les dates doivent être dans la semaine concernée.
+
+Mes créneaux habituels (déjà dans l’app, ne pas les recréer) :
+${rec.length?rec.join('\n'):'- aucun'}
+
+Ce que je veux pour cette semaine :
+[écris ici ton programme : séances, horaires, jours de repos…]`}
+function parsePlan(txt){
+  const a=txt.indexOf('{'),b=txt.lastIndexOf('}');if(a<0||b<a)return{err:['Aucun planning trouvé : colle la réponse complète, qui commence par « { ».']};
+  let o;try{o=JSON.parse(txt.slice(a,b+1).replace(/[“”«»]/g,'"'))}catch(e){return{err:['Le texte n’est pas au bon format. Redemande à Claude de répondre uniquement avec le bloc au format demandé.']}}
+  const err=[],warn=[],D=/^\d{4}-\d{2}-\d{2}$/,H=/^([01]\d|2[0-3]):[0-5]\d$/,okD=d=>typeof d=='string'&&D.test(d)&&!isNaN(pd(d));
+  if(!o||typeof o!='object')return{err:['Le planning doit être un bloc { … }.']};
+  const T=o.tasks==null?[]:o.tasks,X=o.excl==null?{}:o.excl,Y=o.days==null?{}:o.days;
+  if(!Array.isArray(T))err.push('« tasks » doit être une liste [ … ].');
+  if(typeof X!='object'||Array.isArray(X))err.push('« excl » doit être un bloc { … }.');
+  if(typeof Y!='object'||Array.isArray(Y))err.push('« days » doit être un bloc { … }.');
+  if(err.length)return{err};
+  const tasks=[];T.forEach((x,i)=>{const n=`Créneau ${i+1}${x&&x.t?' « '+x.t+' »':''}`;if(!x||typeof x!='object'){err.push(n+' : format invalide.');return}
+    const t=typeof x.t=='string'?x.t.trim():'',cat=x.cat||'sport';
+    if(!t)err.push(n+' : titre manquant.');
+    if(!okD(x.date))err.push(n+' : date invalide (attendu AAAA-MM-JJ).');
+    if(!H.test(x.s||'')||!H.test(x.e||''))err.push(n+' : heures invalides (attendu HH:MM).');
+    else if(x.e<=x.s)warn.push(n+' : finit avant de commencer ('+x.s+'–'+x.e+').');
+    if(!CATS[cat])err.push(n+' : catégorie inconnue « '+cat+' ».');
+    if(x.sp&&!DISC.includes(x.sp))err.push(n+' : discipline inconnue « '+x.sp+' ».');
+    tasks.push({t,date:x.date,s:x.s,e:x.e,cat,sp:x.sp||'Muscu'})});
+  const recT=new Set(S.tasks.filter(x=>x.rec).map(x=>x.t)),excl={};
+  Object.entries(X).forEach(([t,ds])=>{if(!Array.isArray(ds)||!ds.every(okD)){err.push('Créneau masqué « '+t+' » : liste de dates invalide.');return}
+    if(!recT.has(t)){warn.push('Créneau habituel introuvable, ignoré : « '+t+' ».');return}excl[t]=ds});
+  const days={};Object.entries(Y).forEach(([d,v])=>{if(!okD(d)){err.push('Jour « '+d+' » : date invalide.');return}if(!v||typeof v!='object'){err.push('Jour '+d+' : format invalide.');return}
+    const z={};if(v.title!=null)z.title=String(v.title);if(v.tr!=null)z.tr=+v.tr?1:0;days[d]=z});
+  if(!err.length&&!tasks.length&&!Object.keys(excl).length&&!Object.keys(days).length)err.push('Le planning est vide.');
+  return err.length?{err}:{P:{v:'import-'+Date.now(),tasks,excl,days},warn}}
+let planDraft=null;
+function planDlg(){planDraft=null;const[w0,w1]=planWeek();
+  dlg.innerHTML=`<div class="dlg-top"><h2>Importer un planning</h2><button class="btn quiet icon sm" data-a="cdlg" aria-label="Fermer">${ICON.x}</button></div>
+<p class="mu sm"><b>Semaine du ${dMed(w0)} au ${dMed(w1)}</b><br>1. Copie les instructions et colle-les dans une conversation avec Claude, puis écris en bas ce que tu veux pour la semaine.<br>2. Colle ici sa réponse et vérifie le résumé avant d’appliquer.</p>
+<div style="margin-top:12px"><button class="btn ghost sm" data-a="plancp">Copier les instructions pour Claude</button></div>
+<textarea id="pl" style="min-height:150px;margin-top:12px;font-size:12px" aria-label="Planning à importer" placeholder="Colle ici la réponse de Claude"></textarea>
+<div id="pl-out" class="sm" role="status" style="margin-top:10px"></div>
+<div class="dlg-actions"><button class="btn ghost" data-a="cdlg">Annuler</button><button class="btn ghost" data-a="planchk">Vérifier</button><button class="btn" data-a="planok" id="pl-ok" hidden>Appliquer</button></div>`;
+  $('#pl').addEventListener('input',()=>{planDraft=null;$('#pl-ok').hidden=true;$('#pl-out').innerHTML=''});dlg.showModal()}
+Object.assign(ACT,{
+  plan(){planDlg();return'x'},
+  plancp(){copyText(planPrompt(),'Instructions copiées : colle-les dans Claude');return'x'},
+  planchk(){const r=parsePlan($('#pl').value),out=$('#pl-out');planDraft=null;$('#pl-ok').hidden=true;
+    if(r.err){out.innerHTML=`<p style="color:var(--red);font-weight:600">À corriger avant d’importer :</p><ul style="margin:6px 0 0 18px;color:var(--red)">${r.err.slice(0,8).map(e=>`<li>${esc(e)}</li>`).join('')}</ul>`;return'x'}
+    const P=r.P,[d0,d1]=planRange(P),by={};P.tasks.forEach(x=>(by[x.date]=by[x.date]||[]).push(x));
+    const nEx=Object.values(P.excl).reduce((a,d)=>a+d.length,0),nOld=S.tasks.filter(x=>x.plan&&x.date>=d0&&x.date<=d1).length;
+    out.innerHTML=`<p><b>Du ${dMed(d0)} au ${dMed(d1)}</b> · ${P.tasks.length} créneau${P.tasks.length>1?'x':''} · ${Object.keys(P.days).length} jour${Object.keys(P.days).length>1?'s':''} renseigné${Object.keys(P.days).length>1?'s':''}${nEx?` · ${nEx} créneau${nEx>1?'x':''} habituel${nEx>1?'s':''} masqué${nEx>1?'s':''}`:''}</p>
+<ul style="margin:6px 0 0 18px" class="mu">${Object.keys(by).sort().map(d=>`<li>${DN[pd(d).getDay()]} ${dMed(d)} : ${by[d].sort((a,b)=>a.s.localeCompare(b.s)).map(x=>esc(x.t)+' '+x.s).join(' · ')}</li>`).join('')}</ul>
+${nOld?`<p class="mu" style="margin-top:6px">Remplace ${nOld} créneau${nOld>1?'x':''} importé${nOld>1?'s':''} précédemment sur cette période. Tes saisies ne sont pas touchées.</p>`:''}
+${r.warn.length?`<ul style="margin:6px 0 0 18px;color:var(--gold-ink,var(--mute))">${r.warn.map(e=>`<li>${esc(e)}</li>`).join('')}</ul>`:''}`;
+    planDraft=P;$('#pl-ok').hidden=false;return'x'},
+  planok(){if(!planDraft)return'x';const P=planDraft;planDraft=null;applyPlanning(P);_fm=null;dlg.close();save();toast('Planning importé');render();return'x'}
+});
+
 /* ===== Synchronisation en temps réel (PC ↔ iPhone) =====
    Données privées du compte : data/users/<id>/app (cœur) + days/<date> + sessions/<id>.
    En ligne via Firebase (connexion e-mail + mot de passe), ou via l’espace Claude si l’app y est ouverte.
@@ -1860,6 +1942,7 @@ async function fbLoad(){if(FB)return FB;
    - clé modifiée seulement ici depuis la dernière synchro → on garde la version de l’appareil
    - modifiée seulement en ligne → on prend l’en-ligne
    - modifiée des deux côtés, ou premier passage de l’appareil → l’en-ligne fait foi (copie locale gardée) */
+const blankCore=j=>{try{const v=JSON.parse(j);return!(v.tasks||[]).length&&!(v.foods||[]).length&&!(v.goals||[]).length&&!Object.keys(v.bw||{}).length&&!(v.habits||[]).length}catch(e){return false}};
 async function syncStart(base){
   SYNC.base=base;const slow=setTimeout(()=>{if(!SYNC.ready)setSync('slow')},10000);setSync('busy');
   try{
@@ -1869,7 +1952,7 @@ async function syncStart(base){
     const B=loadBase(),L=syncParts();let kept=false;
     if(Object.keys(R).length){
       new Set([...Object.keys(L),...Object.keys(R)]).forEach(k=>{const l=L[k],r=R[k];if(l===r)return;
-        let use;if(!B)use=r!==undefined?r:l;else{const b=B[k];use=l===b?r:r===b?l:(r!==undefined?r:l)}
+        let use;if(!B)use=r!==undefined&&!(k=='core'&&blankCore(r)&&!blankCore(l))?r:l;else{const b=B[k];use=l===b?r:r===b?l:(r!==undefined?r:l)}
         if(use!==l){kept=true;setLocal(k,use)}});
       if(kept){try{if(!localStorage.getItem(KEY+'-avant-synchro'))localStorage.setItem(KEY+'-avant-synchro',localStorage.getItem(KEY)||'')}catch(e){}}
       migrate();_fm=null}
@@ -1897,19 +1980,34 @@ async function fbStart(u){if(SYNC.ready||SYNC.starting)return;SYNC.starting=true
 addEventListener('online',()=>{if(SYNC.ready||SYNC.mode!='fb')return;if(!FB)syncInit();else if(FB.auth.currentUser)fbStart(FB.auth.currentUser)});
 
 /* Fenêtre « Compte » : connexion, état, déconnexion */
-const fbErr=x=>{const c=x&&x.code||'';return/invalid-credential|wrong-password|user-not-found|invalid-email/.test(c)?'E-mail ou mot de passe incorrect.':/too-many-requests/.test(c)?'Trop d’essais : réessaie dans quelques minutes.':/network/.test(c)||!navigator.onLine?'Pas de connexion internet pour le moment.':'Connexion impossible, réessaie.'};
+const fbErr=x=>{const c=x&&x.code||'';return/email-already-in-use/.test(c)?'Un compte existe déjà avec cet e-mail : connecte-toi.':/weak-password/.test(c)?'Mot de passe trop faible : 6 caractères minimum.':/operation-not-allowed|admin-restricted/.test(c)?'La création de compte n’est pas activée pour le moment.':/invalid-credential|wrong-password|user-not-found|invalid-email/.test(c)?'E-mail ou mot de passe incorrect.':/too-many-requests/.test(c)?'Trop d’essais : réessaie dans quelques minutes.':/network/.test(c)||!navigator.onLine?'Pas de connexion internet pour le moment.':'Connexion impossible, réessaie.'};
+let acctMode='login';
 function acctDlg(){const u=FB&&FB.auth.currentUser,top=`<div class="dlg-top"><h2>Synchronisation</h2><button class="btn quiet icon sm" data-a="cdlg" aria-label="Fermer">${ICON.x}</button></div>`;
   if(SYNC.mode=='claude'||u){dlg.innerHTML=top+`<p class="mu sm">${u?'Connecté avec <b>'+esc(u.email||'')+'</b>. ':''}Tes saisies sont enregistrées en ligne et apparaissent sur tous tes appareils connectés.</p><p style="margin-top:12px"><span class="sync ${SYNC_TXT[syncState][1]}"><i></i>${SYNC_TXT[syncState][0]}</span></p><div class="dlg-actions">${u?'<button class="btn ghost" data-a="logout" style="margin-right:auto">Se déconnecter</button>':''}<button class="btn" data-a="cdlg">Fermer</button></div>`}
+  else if(acctMode=='signup'){dlg.innerHTML=top+`<p class="mu sm">Crée ton compte pour retrouver tes données sur tous tes appareils. Ce que tu as déjà saisi sur cet appareil sera enregistré dans ce compte.</p>
+<label class="field" style="margin-top:14px"><span>E-mail</span><input id="lg-e" type="email" autocomplete="username" autocapitalize="off" spellcheck="false" inputmode="email"></label>
+<label class="field" style="margin-top:10px"><span>Mot de passe (6 caractères minimum)</span><input id="lg-p" type="password" autocomplete="new-password"></label>
+<label class="field" style="margin-top:10px"><span>Confirme le mot de passe</span><input id="lg-p2" type="password" autocomplete="new-password"></label>
+<p id="lg-msg" class="sm" role="alert" style="margin-top:10px;min-height:1.4em;color:var(--red)"></p>
+<div class="dlg-actions"><button class="btn quiet" data-a="acctmode" data-m="login" style="margin-right:auto">J’ai déjà un compte</button><button class="btn ghost" data-a="cdlg">Plus tard</button><button class="btn" id="lg-b" data-a="signup">Créer mon compte</button></div>`;
+    dlg.querySelectorAll('#lg-e,#lg-p,#lg-p2').forEach(i=>i.addEventListener('keydown',e=>{if(e.key=='Enter'){e.preventDefault();ACT.signup()}}))}
   else{dlg.innerHTML=top+`<p class="mu sm">Connecte-toi pour retrouver tes données sur ton iPhone et ton ordinateur. À faire une seule fois par appareil.</p>
 <p class="mu sm" style="margin-top:8px">Première connexion : commence par l’appareil qui contient tes saisies les plus complètes.</p>
 <label class="field" style="margin-top:14px"><span>E-mail</span><input id="lg-e" type="email" autocomplete="username" autocapitalize="off" spellcheck="false" inputmode="email"></label>
 <label class="field" style="margin-top:10px"><span>Mot de passe</span><input id="lg-p" type="password" autocomplete="current-password"></label>
 <p id="lg-msg" class="sm" role="alert" style="margin-top:10px;min-height:1.4em;color:var(--red)"></p>
-<div class="dlg-actions"><button class="btn quiet" data-a="pwreset" style="margin-right:auto">Mot de passe oublié</button><button class="btn ghost" data-a="cdlg">Plus tard</button><button class="btn" id="lg-b" data-a="login">Se connecter</button></div>`;
+<p class="sm" style="margin-top:2px">Pas encore de compte ? <button class="btn quiet sm" data-a="acctmode" data-m="signup" style="padding:0 6px;min-height:28px;color:var(--red)">Créer un compte</button></p>
+<div class="dlg-actions"><button class="btn quiet" data-a="pwreset">Mot de passe oublié</button><span class="grow"></span><button class="btn ghost" data-a="cdlg">Plus tard</button><button class="btn" id="lg-b" data-a="login">Se connecter</button></div>`;
     dlg.querySelectorAll('#lg-e,#lg-p').forEach(i=>i.addEventListener('keydown',e=>{if(e.key=='Enter'){e.preventDefault();ACT.login()}}))}
   dlg.showModal()}
 Object.assign(ACT,{
-  acct(){acctDlg();return'x'},
+  acct(){acctMode='login';acctDlg();return'x'},
+  acctmode(q){acctMode=q.m;acctDlg();setTimeout(()=>{const i=$('#lg-e');if(i)i.focus()},50);return'x'},
+  signup(){const e=$('#lg-e').value.trim(),p=$('#lg-p').value,p2=$('#lg-p2').value,m=$('#lg-msg'),b=$('#lg-b');m.style.color='var(--red)';
+    if(!e||!p){m.textContent='Renseigne ton e-mail et un mot de passe.';return'x'}if(p.length<6){m.textContent='Mot de passe trop court : 6 caractères minimum.';return'x'}if(p!==p2){m.textContent='Les deux mots de passe ne sont pas identiques.';return'x'}
+    b.disabled=true;m.style.color='var(--mute)';m.textContent='Création du compte…';
+    (async()=>{try{const F=await fbLoad();await F.au.createUserWithEmailAndPassword(F.auth,e,p);dlg.close();toast('Compte créé · synchronisation en cours')}
+      catch(x){m.style.color='var(--red)';m.textContent=fbErr(x)}finally{b.disabled=false}})();return'x'},
   login(){const e=$('#lg-e').value.trim(),p=$('#lg-p').value,m=$('#lg-msg'),b=$('#lg-b');if(!e||!p){m.textContent='Renseigne ton e-mail et ton mot de passe.';return'x'}
     b.disabled=true;m.style.color='var(--mute)';m.textContent='Connexion…';
     (async()=>{try{const F=await fbLoad();await F.au.signInWithEmailAndPassword(F.auth,e,p);dlg.close();toast('Connecté · synchronisation en cours')}
