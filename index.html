@@ -198,6 +198,7 @@ details.more summary{cursor:pointer;font-weight:600;list-style:none;display:flex
 details.more summary::-webkit-details-marker{display:none}
 details.more summary::before{content:"+";display:inline-grid;place-items:center;width:22px;height:22px;border-radius:6px;background:var(--surface);font-weight:700}
 details.more[open] summary::before{content:"–"}
+.cx-in{display:flex;align-items:center;gap:6px}.cx-in input{flex:1;min-width:0}
 .formgrid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));margin-top:12px}
 .formgrid input,.formgrid select{width:100%}
 
@@ -419,6 +420,7 @@ const norm=s=>String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/
 const CATS={sport:['Sport','#C8102E'],work:['Travail','#5B6472'],nutri:['Nutrition / protocoles','#2E8B57'],perso:['Lecture / perso','#7A5AC8'],repos:['Repos','#6E9A2E']};
 const PR={1:'Fixe',2:'Important',3:'Facultatif'};
 const SLOTS=['Matin / café','Déjeuner','Pré / post-training','Dîner','Collation'];
+const CX_TYPES=['Volley','Hyrox / Course','Cardio Zone 2']; /* remplacés par le module Cardio ; gardés pour les anciennes séances */
 const SPM={'Upper':'Muscu','Lower':'Muscu','Push':'Muscu','Pull':'Muscu','Volley':'Volley','Hyrox / Course':'Course','Cardio Zone 2':'Cardio','Streetworkout':'Streetworkout'},TT=Object.keys(SPM),DISC=['Muscu','Volley','Course','Cardio','Streetworkout'];
 const PEC=['RAS','Vigilance','Gêne'];
 /* Bibliothèque d’exercices : nom|équipement|mode (c = charge, l = PDC & lesté, t = temps), groupés par muscle */
@@ -1082,7 +1084,7 @@ const KEY='lpos-v4';
 let S,tab='today',cur=TODAY,mo=TODAY.slice(0,7),chEx='',D={},gi=0,pick=null,addSlot=null,addUnit=null,resIdx=0;
 
 /* App vide pour un nouvel appareil ou un nouveau compte (les données existantes ne passent jamais par ici) */
-function seed(){return{tasks:[],logs:{},foods:[],bw:{},habits:[],tg:{w:2750,pg:10,st:10000,caf:250,slp:85,sh:7.5,sp:{...MACRO_LOCK.sp},off:{...MACRO_LOCK.off}},goals:[],guides:[],xlib:[],sessions:[]}}
+function seed(){return{tasks:[],logs:{},foods:[],bw:{},habits:[],cardio:[],tg:{w:2750,pg:10,st:10000,caf:250,slp:85,sh:7.5,sp:{...MACRO_LOCK.sp},off:{...MACRO_LOCK.off}},goals:[],guides:[],xlib:[],sessions:[]}}
 
 /* ===================== PLANNING DE LA SEMAINE =====================
    Mis à jour chaque semaine. Changer « v » pour que l’app applique
@@ -1128,7 +1130,7 @@ function applyPlanning(P){
 }
 
 function migrate(){
-  S.foods=S.foods||[];S.bw=S.bw||{};S.goals=S.goals||[];S.guides=S.guides||[];S.sessions=S.sessions||[];S.habits=S.habits||[];S.logs=S.logs||{};
+  S.foods=S.foods||[];S.bw=S.bw||{};S.goals=S.goals||[];S.guides=S.guides||[];S.sessions=S.sessions||[];S.cardio=S.cardio||[];S.habits=S.habits||[];S.logs=S.logs||{};
   delete S.favs; // « Repas favoris » supprimés
   const t=S.tg||{};S.tg={w:2750,pg:10,st:10000,caf:250,slp:85,sh:7.5,...t,sp:{...MACRO_LOCK.sp},off:{...MACRO_LOCK.off}};
   if(S.dark!==undefined){S.theme=S.dark?'dark':'light';delete S.dark}
@@ -1398,12 +1400,13 @@ function dayRecap(d){const l=lg(d),m=mac(d),T=S.tg,tg=tgDay(l),s=l.sl||{},sm=sle
     `Lecture : ${nf(l.pg)} / ${T.pg} pages`+(l.bk?` (${l.bk})`:'')];
   const ss=S.sessions.filter(z=>z.date==d);
   if(!ss.length)L.push('Séance : aucune');else ss.forEach(z=>{L.push(`Séance : ${z.type} · pec ${z.pec||'RAS'}`);z.ex.forEach(e=>{if(e.sets.length)L.push(`  - ${e.n} : ${fmtList(e)}${uniTxt(e)}`)})});
+  const cs=S.cardio.filter(z=>z.date==d);if(!cs.length)L.push('Cardio : aucune');else cs.forEach(z=>L.push('Cardio : '+cxRecap(z)));
   return L.join('\n')}
 async function copyText(t,ok){try{await navigator.clipboard.writeText(t);toast(ok);return}catch(e){}
   try{const ta=document.createElement('textarea');ta.value=t;ta.setAttribute('readonly','');ta.style.cssText='position:fixed;top:0;left:0;opacity:0';document.body.appendChild(ta);ta.select();const r=document.execCommand('copy');ta.remove();if(r){toast(ok);return}}catch(e){}
   dlg.innerHTML=`<div class="dlg-top"><h2>Copier le texte</h2><button class="btn quiet icon sm" data-a="cdlg" aria-label="Fermer">${ICON.x}</button></div><p class="mu sm">La copie automatique est bloquée ici : sélectionne le texte puis copie-le.</p><textarea id="cpt" readonly style="min-height:220px;margin-top:12px;font-size:13px">${esc(t)}</textarea><div class="dlg-actions"><button class="btn" data-a="cdlg">Fermer</button></div>`;dlg.showModal();$('#cpt').select()}
 function dupSession(se,date){const nid=uid(),vis=sessVisible(),o=new Set(vis.filter(z=>isOpenS(z.id,vis)).map(z=>z.id));
-  S.sessions.push({id:nid,date,type:se.type,sp:se.sp||SPM[se.type]||'Muscu',pec:'RAS',note:'',ex:se.ex.map(e=>({n:e.n,mode:e.mode,uni:!!e.uni,sets:e.sets.map(s=>({...s})),note:e.note||''}))});
+  const nz={id:nid,date,type:se.type,sp:se.sp||SPM[se.type]||'Muscu',pec:'RAS',note:'',ex:se.ex.map(e=>({n:e.n,mode:e.mode,uni:!!e.uni,sets:e.sets.map(s=>({...s})),note:e.note||''}))};S.sessions.push(nz);linkSlot(nz,sessDisc(nz));
   if(date.slice(0,7)!==curSessMonth())o.clear();o.add(nid);sessMonth=date.slice(0,7);sessOpen=o;toast(`Séance ${se.type} dupliquée au ${dS(date)}`)}
 let sessOpen=null; /* null = réglage par défaut : seule la séance la plus récente est ouverte */
 const isOpenS=(id,ss)=>sessOpen?sessOpen.has(id):!!(ss[0]&&ss[0].id==id);
@@ -1418,9 +1421,10 @@ function vTrain(){
   const pec4=gymStats(add(TODAY,-27),TODAY).pec,smo=curSessMonth(),ss=sessVisible();
   return`
 <div class="cols">
-  <section class="panel"><div class="panel-h"><h2>Nouvelle séance</h2></div><div class="row"><input type="date" id="sd" value="${cur}" aria-label="Date de la séance"><select id="st" aria-label="Type de séance">${TT.map(t=>`<option>${t}</option>`).join('')}</select><button class="btn" data-a="newsess">Créer la séance</button><button class="btn ghost" data-a="resume" title="Copie la dernière séance du type choisi">${ICON.dup}Reprendre la dernière séance</button></div></section>
+  <section class="panel"><div class="panel-h"><h2>Nouvelle séance de muscu</h2></div><div class="row"><input type="date" id="sd" value="${cur}" aria-label="Date de la séance"><select id="st" aria-label="Type de séance">${TT.filter(t=>!CX_TYPES.includes(t)).map(t=>`<option>${t}</option>`).join('')}</select><button class="btn" data-a="newsess">Créer la séance</button><button class="btn ghost" data-a="resume" title="Copie la dernière séance du type choisi">${ICON.dup}Reprendre la dernière séance</button></div></section>
   <section class="panel"><div class="panel-h"><h2>Poids de corps</h2><span class="mu sm">${bw.length?'Dernier : '+nf(bw[bw.length-1].y,1)+' kg':''}</span></div><div class="row"><input id="bwv" type="number" step="0.1" inputmode="decimal" placeholder="kg" aria-label="Poids en kg"><button class="btn ghost" data-a="addbw">Enregistrer au ${dS(cur)}</button></div><div style="margin-top:12px">${svgLine(bw,C.mute,' kg')}</div></section>
 </div>
+${vCardio()}
 <div class="cols" style="margin-top:16px">
   <section class="panel"><div class="panel-h"><h2>Progression</h2><select data-ce aria-label="Exercice">${names.map(n=>`<option ${n==chEx?'selected':''}>${esc(n)}</option>`).join('')}</select></div><p class="mu sm">${LB[0]}</p>${svgLine(p.map(a=>({x:a.x,y:a.max})),C.gold,LB[2])}<p class="mu sm" style="margin-top:10px">${LB[1]}</p>${svgLine(p.map(a=>({x:a.x,y:a.vol})),C.red,LB[3])}</section>
   <section class="panel"><div class="panel-h"><h2>Charge par semaine</h2><span class="mu sm">8 dernières semaines</span></div><p class="mu sm">Tonnage (charges + poids de corps × reps sur les exercices lestés)</p>${svgBars(wv.map(a=>({x:a.x,y:Math.round(a.vol)})),0,' kg')}<p class="mu sm" style="margin-top:10px">Séries par semaine</p>${svgBars(wv.map(a=>({x:a.x,y:a.sets})),0,' séries')}
@@ -1454,7 +1458,14 @@ function setFields(id,i,j,m,st,uni){const SD=uni?'<span class="unit">/ côté</s
 
 /* ===== Agrégation (semaine / mois) ===== */
 const wkStart=d=>{const x=pd(d).getDay();return add(d,x==0?-6:1-x)};
-function sportStats(a,b){const r={p:0,d:0,by:{}};DISC.forEach(k=>r.by[k]={p:0,d:0});for(let d=a;d<=b;d=add(d,1))occ(d).filter(x=>x.cat=='sport').forEach(x=>{const k=r.by[x.sp]||r.by.Muscu;r.p++;k.p++;if(x.done[d]){r.d++;k.d++}});return r}
+/* Séances de sport : créneaux sport du planning + séances enregistrées dans Training.
+   Par jour et par discipline : une séance enregistrée valide un créneau prévu (sans double compte) ; sans créneau prévu, elle compte en plus. */
+function sportStats(a,b){const r={p:0,d:0,by:{}};DISC.forEach(k=>r.by[k]={p:0,d:0});
+  for(let d=a;d<=b;d=add(d,1)){const P={},C={},N={},K=k=>r.by[k]?k:'Muscu';
+    occ(d).filter(x=>x.cat=='sport').forEach(x=>{const k=K(x.sp);P[k]=(P[k]||0)+1;if(x.done[d])C[k]=(C[k]||0)+1});
+    daySess(d).forEach(k=>{k=K(k);N[k]=(N[k]||0)+1});
+    new Set([...Object.keys(P),...Object.keys(N)]).forEach(k=>{const p=P[k]||0,n=N[k]||0,ex=Math.max(0,n-p),dn=Math.max(C[k]||0,Math.min(n,p))+ex;r.p+=p+ex;r.d+=dn;r.by[k].p+=p+ex;r.by[k].d+=dn})}
+  return r}
 function agg(a,b){
   const R={days:0,P:0,Dn:0,NF:0,RP:0,hp:0,hd:0,pr:{1:[0,0],2:[0,0],3:[0,0]},cat:{},pg:0,books:{},water:0,steps:[],slS:[],slM:[],eff:[],bed:[],kc:[],kt:[],pt:[],caf:[],kO:[],net:[],hbD:0,hbT:0,pm:0,actDays:0,sup:{},gkg:[]};
   Object.keys(CATS).forEach(k=>R.cat[k]=[0,0]);
@@ -1473,7 +1484,7 @@ function agg(a,b){
     R.hbT+=S.habits.length+1;R.hbD+=S.habits.filter(h=>l.h[h]).length+(l.pm?1:0);if(l.pm)R.pm++;
     Object.entries(m.sup).forEach(([n,q])=>{const s=R.sup[n]||(R.sup[n]={days:0,q:0});s.days++;s.q+=q});
   }
-  R.sport=sportStats(a,b);R.gym=gymStats(a,b);
+  R.sport=sportStats(a,b);R.gym=gymStats(a,b);R.cx=cxStats(a,b);
   const bwk=Object.keys(S.bw).filter(x=>x>=a&&x<=b).sort();R.bw=bwk.length?{a:S.bw[bwk[0]],b:S.bw[bwk[bwk.length-1]],n:bwk.length}:null;
   return R}
 const pc=(v,t)=>t?Math.round(v/t*100):0;
@@ -1510,13 +1521,16 @@ function vWeek(){
 </div></div>
 <p class="mu sm" style="margin:8px 2px 0">Glisse un créneau pour le déplacer (sur iPhone : appui long puis glisser). Touche-le pour le valider, le modifier ou le supprimer.</p>
 
-<section class="section"><h2>Bilan de la semaine</h2>
+<section class="section"><div class="panel-h"><h2>Bilan de la semaine</h2><button class="btn ghost sm" data-a="weekrecap">${ICON.copy}Copier le bilan de la semaine</button></div>
 <div class="stats">
   <div class="stat"><b class="red">${pc(A.Dn,A.P)} %</b><span>Tâches réalisées (${A.Dn}/${A.P})</span></div>
   <div class="stat"><b>${nf(A.hd,1)} / ${nf(A.hp,1)} h</b><span>Heures réalisées / prévues</span></div>
   <div class="stat"><b>${A.sport.d} / ${A.sport.p}</b><span>Séances validées</span></div>
   <div class="stat"><b>${A.NF}</b><span>Tâches non faites (jours passés)</span></div>
   <div class="stat"><b>${A.RP}</b><span>Tâches reportées</span></div>
+  <div class="stat"><b>${A.cx.min?hm(A.cx.min):'–'}</b><span>Temps cardio (${A.cx.n} séance${A.cx.n>1?'s':''})</span></div>
+  <div class="stat"><b>${A.cx.fc?A.cx.fc+' bpm':'–'}</b><span>FC moyenne cardio</span></div>
+  <div class="stat"><b>${A.cx.kcal?nf(A.cx.kcal):'–'}</b><span>kcal actives cardio</span></div>
 </div></section>
 
 <div class="cols" style="margin-top:16px">
@@ -1553,6 +1567,7 @@ function vMonth(){
   const cells=[...Array(off)].map(()=>'<div></div>');
   for(let i=1;i<=nd;i++){const d=`${mo}-${String(i).padStart(2,'0')}`,o=occ(d),l=S.logs[d],ss=S.sessions.filter(z=>z.date==d),bd=[];
     o.filter(x=>x.cat=='sport').forEach((x,k)=>bd.push([CATS.sport[1],(x.sp=='Muscu'&&ss[k]?ss[k].type:(x.sp||'Muscu'))+(x.done[d]?' ✓':'')]));
+    S.cardio.filter(z=>z.date==d&&!(z.ck&&z.ck.d==d)).forEach(z=>bd.push([CATS.sport[1],cxDef(z.x).s+' ✓']));
     const rp=o.find(z=>z.cat=='repos');if(rp)bd.push([CATS.repos[1],'Repos'+(rp.done[d]?' ✓':'')]);
     if(l&&+l.sl.score)bd.push(['#5B6472','Sommeil '+l.sl.score]);
     cells.push(`<button data-a="goto" data-d="${d}" class="${d==TODAY?'today':''}" aria-label="${dLong(d)}"><b>${i}</b>${bd.map(b=>`<span class="bdg" style="background:${b[0]}">${esc(b[1])}</span>`).join('')}</button>`)}
@@ -1638,6 +1653,106 @@ function openGoals(){const t=S.tg,f=(k,l,u)=>`<label class="field"><span>${l}</s
   <div class="dlg-actions"><button class="btn" data-a="cdlg">Terminé</button></div>`;dlg.showModal()}
 
 /* ===== Clics ===== */
+/* ===== Cardio / Conditionnement =====
+   Une séance cardio : {id,date,x (exercice),dur,fcm,fcx,kcal,rpe,note,v:{champs propres à l’exercice},ck (créneau du planning coché automatiquement)} */
+const CXF={res:['Résistance / niveau',''],w:['Puissance moy.','W'],rpm:['Cadence','RPM'],km:['Distance','km'],m:['Distance','m'],kcm:['Calories machine','kcal'],
+  dist:['Distance','',{u:'du',o:['km','m']}],pace:['Allure moy.','/500 m','pace'],spm:['Cadence','coups/min'],sm:['Cadence','s/m'],dmp:['Damper','1–10','r'],
+  pente:['Pente','%'],epente:['Pente (si dispo)','%'],kmh:['Vitesse','km/h'],allure:['Allure moy.','min/km','pace'],dplus:['Dénivelé + (optionnel)','m'],
+  niv:['Niveau / vitesse',''],marches:['Montée','',{u:'mu',o:['marches','étages']}],sets:['Sets joués',''],jeu:['Temps de jeu effectif','min'],
+  stress:['Stress / fatigue nerveuse','1–10','r'],lieu:['Lieu','','sel:Extérieur|Tapis']};
+const CXO=[
+  {k:'velo',n:'Vélo stationnaire (Zone 2)',s:'Vélo',d:'Cardio',f:['res','w','rpm','km']},
+  {k:'assault',n:'Assault Bike',s:'Assault',d:'Cardio',f:['w','rpm','kcm','dist']},
+  {k:'row',n:'Rameur (RowErg)',s:'Rameur',d:'Cardio',f:['m','pace','spm','w','dmp']},
+  {k:'ski',n:'SkiErg',s:'SkiErg',d:'Cardio',f:['m','pace','sm','w','dmp']},
+  {k:'walk',n:'Marche inclinée (tapis)',s:'Marche',d:'Cardio',f:['pente','kmh','km']},
+  {k:'run',n:'Course à pied',s:'Course',d:'Course',f:['lieu','km','allure','dplus']},
+  {k:'ellip',n:'Vélo elliptique',s:'Elliptique',d:'Cardio',f:['res','epente','km','rpm']},
+  {k:'stair',n:'Escalier (StairMaster)',s:'Escalier',d:'Cardio',f:['niv','marches']},
+  {k:'vbm',n:'Volleyball (match)',s:'Volley match',d:'Volley',f:['sets','jeu','stress']},
+  {k:'vbl',n:'Volleyball (loisir)',s:'Volley loisir',d:'Volley',f:['sets','jeu','stress']}];
+const CXC=[['dur','Durée','min'],['fcm','FC moyenne','bpm'],['fcx','FC max','bpm'],['kcal','Calories actives','kcal'],['rpe','RPE / ressenti','1–10','r']];
+const cxDef=k=>CXO.find(o=>o.k==k)||CXO[0];
+const cxx=id=>S.cardio.find(z=>z.id==id);
+/* allure : « 205 », « 2:05 », « 2'05 » → « 2:05 » */
+function parsePace(v){v=String(v||'').trim();if(!v)return'';const m=v.match(/^(\d{1,2})\s*[:'’hm.,]?\s*(\d{2})\s*(s|")?$/);if(!m||+m[2]>59)return null;return(+m[1])+':'+m[2]}
+const has=v=>v!==''&&v!=null;
+function cxSpec(z){const D=cxDef(z.x),v=z.v||{};return D.f.filter(k=>has(v[k])).map(k=>{const[l,u,t]=CXF[k],U=t&&t.u?(v[t.u]||t.o[0]):u;if(t=='r')return`${l} ${v[k]}/10`;return`${l} ${typeof v[k]=='number'?nf(v[k],2):v[k]}${U?(U.startsWith('/')?'':' ')+U:''}`})}
+function cxLine(z){const D=cxDef(z.x),a=[];if(has(z.dur))a.push(nf(z.dur)+' min');
+  if(has(z.fcm)||has(z.fcx))a.push('FC '+(has(z.fcm)?'moy '+z.fcm:'')+(has(z.fcm)&&has(z.fcx)?' / ':'')+(has(z.fcx)?'max '+z.fcx:'')+' bpm');
+  if(has(z.kcal))a.push(nf(z.kcal)+' kcal actives');if(has(z.rpe))a.push('RPE '+z.rpe+'/10');return D.n+(a.length?' · '+a.join(' · '):'')}
+function cxRecap(z,ind=''){const L=[cxLine(z)],sp=cxSpec(z);if(sp.length)L.push(ind+'  '+sp.join(' · '));if(z.note)L.push(ind+'  Note : '+z.note);return L.join('\n')}
+/* Compteur « Séances de sport » : une séance enregistrée coche le créneau prévu le même jour pour la même discipline */
+const sessDisc=z=>z.sp||SPM[z.type]||'Muscu';
+function linkSlot(z,disc){unlinkSlot(z);const x=occ(z.date).find(t=>t.cat=='sport'&&(t.sp||'Muscu')==disc&&!t.done[z.date]);if(x){x.done[z.date]=true;z.ck={id:x.id,d:z.date}}}
+function unlinkSlot(z){if(!z.ck)return;const x=S.tasks.find(t=>t.id==z.ck.id);if(x&&x.done)delete x.done[z.ck.d];delete z.ck}
+const daySess=d=>[...S.sessions.filter(z=>z.date==d).map(sessDisc),...S.cardio.filter(z=>z.date==d).map(z=>cxDef(z.x).d)];
+function cxStats(a,b){const r={n:0,min:0,kcal:0,fw:0,fd:0,fl:[]};S.cardio.filter(z=>z.date>=a&&z.date<=b).forEach(z=>{r.n++;const du=+z.dur||0;r.min+=du;r.kcal+=+z.kcal||0;if(+z.fcm){r.fl.push(+z.fcm);if(du){r.fw+=z.fcm*du;r.fd+=du}}});r.fc=r.fd?Math.round(r.fw/r.fd):r.fl.length?Math.round(avg(r.fl)):0;return r}
+let cxOpen=null,cxMonth=null;
+const cxMonths=()=>{const s=new Set(S.cardio.map(z=>z.date.slice(0,7)));s.add(TODAY.slice(0,7));return[...s].sort().reverse()};
+function curCxMonth(){const ms=cxMonths();if(cxMonth&&ms.includes(cxMonth))return cxMonth;const now=TODAY.slice(0,7);return S.cardio.some(z=>z.date.startsWith(now))?now:(S.cardio.length?[...S.cardio].sort((a,b)=>b.date.localeCompare(a.date))[0].date.slice(0,7):now)}
+const cxVisible=()=>{const m=curCxMonth();return S.cardio.filter(z=>z.date.startsWith(m)).sort((a,b)=>b.date.localeCompare(a.date)||String(b.id).localeCompare(String(a.id)))};
+const isOpenC=(id,ss)=>cxOpen?cxOpen.has(id):!!(ss[0]&&ss[0].id==id);
+function cxField(z,k,lab,u,t){const key=z.id+'|'+k,v=k.startsWith('v.')?(z.v||{})[k.slice(2)]:z[k],val=has(v)?v:'';
+  if(t&&String(t).startsWith('sel:'))return`<label class="field"><span>${lab}</span><select data-cx="${key}">${['',...t.slice(4).split('|')].map(o=>`<option value="${o}" ${val==o?'selected':''}>${o||'–'}</option>`).join('')}</select></label>`;
+  const inp=t=='pace'?`<input type="text" inputmode="numeric" data-cx="${key}" value="${esc(val)}" placeholder="m:ss" aria-label="${lab}">`
+    :`<input type="number" step="any" inputmode="decimal" min="${t=='r'?1:0}" ${t=='r'?'max="10"':''} data-cx="${key}" value="${val}" aria-label="${lab}">`;
+  const uo=t&&t.u?`<select data-cx="${z.id}|v.${t.u}" aria-label="Unité" style="width:auto;flex:none">${t.o.map(o=>`<option ${((z.v||{})[t.u]||t.o[0])==o?'selected':''}>${o}</option>`).join('')}</select>`:u?`<span class="unit">${u}</span>`:'';
+  return`<label class="field"><span>${lab}</span><span class="cx-in">${inp}${uo}</span></label>`}
+function vCardio(){const ss=cxVisible(),mo=curCxMonth(),w0=wkStart(TODAY),W=cxStats(w0,add(w0,6));
+  return`<section class="section"><div class="panel-h"><h2>Cardio / Conditionnement</h2><span class="mu sm">Cette semaine : ${W.n} séance${W.n>1?'s':''}${W.min?' · '+hm(W.min):''}${W.fc?' · FC moy. '+W.fc+' bpm':''}</span></div>
+  <div class="panel" style="margin-bottom:14px"><div class="row"><input type="date" id="cxd" value="${cur}" aria-label="Date de la séance cardio"><select id="cxe" aria-label="Exercice cardio">${CXO.map(o=>`<option value="${o.k}">${o.n}</option>`).join('')}</select><button class="btn" data-a="newcx">Ajouter la séance cardio</button></div></div>
+  <div class="fchips" role="group" aria-label="Mois" style="margin-bottom:14px">${cxMonths().map(m=>{const n=S.cardio.filter(z=>z.date.startsWith(m)).length;return`<button class="${m==mo?'on':''}" data-a="cxmon" data-v="${m}" ${m==mo?'aria-current="true"':''}>${monthLabel(m)} · ${n}</button>`}).join('')}</div>
+  ${ss.length?ss.map(z=>{const D=cxDef(z.x);return!isOpenC(z.id,ss)?`<div class="panel sess-closed"><button type="button" class="sess-row" data-a="cxt" data-id="${z.id}" aria-expanded="false" aria-label="Déplier ${esc(D.n)} du ${dLong(z.date)}"><span class="chev">${ICON.chev}</span><span class="sess-sum"><b>${DJ[pd(z.date).getDay()]} ${dMed(z.date)}</b> · ${esc(D.n)}${has(z.dur)?' · '+nf(z.dur)+' min':''}${has(z.fcm)?' · '+z.fcm+' bpm':''}</span>${has(z.rpe)?`<span class="pill ${+z.rpe>=8?'red':+z.rpe>=6?'gold':'ok'}">RPE ${z.rpe}</span>`:''}</button></div>`
+    :`<div class="panel" style="margin-bottom:12px">
+    <div class="panel-h" style="margin-bottom:10px"><button type="button" class="btn quiet icon sm chev open" data-a="cxt" data-id="${z.id}" aria-expanded="true" aria-label="Replier la séance">${ICON.chev}</button><h2 class="sess-title" data-a="cxt" data-id="${z.id}">${esc(D.n)} · ${dLong(z.date)}</h2></div>
+    <div class="row sess-tools"><span class="grow"></span><button class="btn ghost sm" data-a="cxrecap" data-id="${z.id}">${ICON.copy}Copier le récap</button><button class="btn danger sm" data-a="delcx" data-id="${z.id}">Supprimer</button></div>
+    <div class="formgrid cx-grid"><label class="field"><span>Date</span><input type="date" data-cx="${z.id}|date" value="${z.date}"></label><label class="field"><span>Exercice</span><select data-cx="${z.id}|x">${CXO.map(o=>`<option value="${o.k}" ${o.k==z.x?'selected':''}>${o.n}</option>`).join('')}</select></label></div>
+    <p class="mu xs" style="margin-top:12px">Apple Watch</p>
+    <div class="formgrid cx-grid" style="margin-top:6px">${CXC.map(([k,l,u,t])=>cxField(z,k,l,u,t)).join('')}</div>
+    <p class="mu xs" style="margin-top:12px">${esc(D.s)} · machine</p>
+    <div class="formgrid cx-grid" style="margin-top:6px">${D.f.map(k=>{const[l,u,t]=CXF[k];return cxField(z,'v.'+k,l,u,t)}).join('')}</div>
+    <input data-cx="${z.id}|note" type="text" style="width:100%;margin-top:12px" placeholder="Note rapide : sensations, météo, matériel…" aria-label="Note de la séance cardio" value="${esc(z.note||'')}">
+  </div>`}).join(''):`<div class="empty">Aucune séance cardio en ${monthLabel(mo).toLowerCase()}.</div>`}
+</section>`}
+function cxChange(t,d){const[id,k]=d.cx.split('|'),z=cxx(id);if(!z)return;
+  if(k=='date'){if(!t.value){t.value=z.date;return}z.date=t.value;linkSlot(z,cxDef(z.x).d);cxMonth=z.date.slice(0,7)}
+  else if(k=='x'){z.x=t.value;linkSlot(z,cxDef(z.x).d)}
+  else if(k=='note'){z.note=t.value;save();return}
+  else{const f=k.startsWith('v.')?k.slice(2):k,o=k.startsWith('v.')?(z.v=z.v||{}):z,cc=CXC.find(c=>c[0]==f),typ=k.startsWith('v.')?(CXF[f]?CXF[f][2]:null):(cc?cc[3]:null);
+    let v=t.value;
+    if(typ=='pace'){const p=parsePace(v);if(p===null){toast('Allure invalide : tape par exemple 2:05 ou 205.');t.value=o[f]||'';return}v=p}
+    else if(t.tagName=='SELECT'){}
+    else{v=v===''?'':+v;if(typ=='r'&&v!==''&&(v<1||v>10)){toast('Valeur de 1 à 10.');t.value=o[f]??'';return}}
+    if(v==='')delete o[f];else o[f]=v}
+  renderKeep()}
+const CX_ACT={
+  newcx(){const id=uid(),dt=$('#cxd').value||cur,z={id,date:dt,x:$('#cxe').value,v:{},note:''};S.cardio.push(z);linkSlot(z,cxDef(z.x).d);
+    const ss=cxVisible(),o=new Set(ss.filter(c=>isOpenC(c.id,ss)).map(c=>c.id));if(dt.slice(0,7)!==curCxMonth())o.clear();o.add(id);cxOpen=o;cxMonth=dt.slice(0,7);
+    toast(z.ck?'Séance cardio ajoutée · créneau du planning coché':'Séance cardio ajoutée')},
+  cxt(q){const ss=cxVisible(),o=new Set(ss.filter(z=>isOpenC(z.id,ss)).map(z=>z.id));o.has(q.id)?o.delete(q.id):o.add(q.id);cxOpen=o},
+  cxmon(q){cxMonth=q.v;cxOpen=null},
+  cxrecap(q){copyText(cxRecap(cxx(q.id))+'\n'+dLongY(cxx(q.id).date),'Récap cardio copié');return'x'},
+  delcx(q){ask('Supprimer cette séance cardio ?',()=>{const z=cxx(q.id);if(z)unlinkSlot(z);S.cardio=S.cardio.filter(c=>c.id!=q.id);render()},'Supprimer');return'x'},
+  weekrecap(){copyText(weekRecap(wkStart(cur)),'Bilan de la semaine copié');return'x'}
+};
+function weekRecap(w0){const w1=add(w0,6),A=agg(w0,w1),T=S.tg,C=cxStats(w0,w1),sp=A.sport;
+  const L=[`Bilan de la semaine du ${dMed(w0)} au ${dMed(w1)} ${w1.slice(0,4)}`,
+    `Tâches réalisées : ${pc(A.Dn,A.P)} % (${A.Dn}/${A.P}) · heures ${nf(A.hd,1)} / ${nf(A.hp,1)} h`,
+    `Séances de sport : ${sp.d} / ${sp.p}`+(()=>{const b=Object.entries(sp.by).filter(([k,v])=>v.p||v.d).map(([k,v])=>`${k} ${v.d}/${v.p}`);return b.length?' ('+b.join(', ')+')':''})(),
+    `Cardio : ${C.n} séance${C.n>1?'s':''}`+(C.min?` · ${hm(C.min)}`:'')+(C.fc?` · FC moy. ${C.fc} bpm`:'')+(C.kcal?` · ${nf(C.kcal)} kcal actives`:''),
+    `Lecture : ${nf(A.pg)} / ${T.pg*7} pages`,
+    `Hydratation : ${nf(A.water/1000,1)} / ${nf(T.w*7/1000,1)} L`,
+    `Pas (moy./jour) : ${nf(Math.round(avg(A.steps)))} / ${nf(T.st)}`,
+    `Sommeil (moy.) : score ${Math.round(avg(A.slS))||'–'} · ${A.slM.length?hm(Math.round(avg(A.slM))):'–'}`,
+    `Calories (moy./jour) : ${nf(Math.round(avg(A.kc)))} kcal · protéines ${nf(Math.round(avg(A.pt)))} g`+(A.gkg.length?` (${nf(avg(A.gkg),2)} g/kg)`:''),
+    `Habitudes cochées : ${A.hbD} / ${A.hbT}`];
+  if(A.bw)L.push(`Poids : ${nf(A.bw.b,1)} kg`+(A.bw.n>1?` (${A.bw.b-A.bw.a>=0?'+':''}${nf(A.bw.b-A.bw.a,1)} kg)`:''));
+  const ms=S.sessions.filter(z=>z.date>=w0&&z.date<=w1).sort((a,b)=>a.date.localeCompare(b.date)),cs=S.cardio.filter(z=>z.date>=w0&&z.date<=w1).sort((a,b)=>a.date.localeCompare(b.date));
+  L.push('','Séances de muscu :');if(!ms.length)L.push('  aucune');ms.forEach(z=>{L.push(`- ${DN[pd(z.date).getDay()]} ${dMed(z.date)} · ${z.type} · pec ${z.pec||'RAS'}`);z.ex.forEach(e=>{if(e.sets.length)L.push(`    ${e.n} : ${fmtList(e)}${uniTxt(e)}`)});if(z.note)L.push('    Note : '+z.note)});
+  L.push('','Séances cardio :');if(!cs.length)L.push('  aucune');cs.forEach(z=>L.push(`- ${DN[pd(z.date).getDay()]} ${dMed(z.date)} · `+cxRecap(z,'  ')));
+  return L.join('\n')}
+
 const sess=id=>S.sessions.find(z=>z.id==id);
 const ACT={
   th(){const dark=S.theme?S.theme=='dark':matchMedia('(prefers-color-scheme: dark)').matches;S.theme=dark?'light':'dark'},
@@ -1685,8 +1800,8 @@ const ACT={
   resume(){const t=$('#st').value,all=[...S.sessions].sort((a,b)=>b.date.localeCompare(a.date)),src=all.find(z=>z.type==t&&z.ex.length)||all.find(z=>z.ex.length);if(!src)return toast('Aucune séance à reprendre.'),'x';dupSession(src,$('#sd').value||cur)},
   exmv(q){const e=sess(q.id).ex,i=+q.i,j=i+ +q.n;if(j<0||j>=e.length)return'x';[e[i],e[j]]=[e[j],e[i]]},
   uni(q){const e=sess(q.id).ex[+q.i];e.uni=!e.uni},
-  newsess(){const ss=sessVisible(),o=new Set(ss.filter(z=>isOpenS(z.id,ss)).map(z=>z.id)),nid=uid(),dt=$('#sd').value||cur;if(dt.slice(0,7)!==curSessMonth())o.clear();o.add(nid);sessOpen=o;sessMonth=dt.slice(0,7);S.sessions.push({id:nid,date:dt,type:$('#st').value,sp:SPM[$('#st').value],pec:'RAS',note:'',ex:[]});toast('Séance créée')},
-  delsess(q){ask('Supprimer cette séance ?',()=>{S.sessions=S.sessions.filter(s=>s.id!=q.id);render()},'Supprimer');return'x'},
+  newsess(){const ss=sessVisible(),o=new Set(ss.filter(z=>isOpenS(z.id,ss)).map(z=>z.id)),nid=uid(),dt=$('#sd').value||cur;if(dt.slice(0,7)!==curSessMonth())o.clear();o.add(nid);sessOpen=o;sessMonth=dt.slice(0,7);const se={id:nid,date:dt,type:$('#st').value,sp:SPM[$('#st').value],pec:'RAS',note:'',ex:[]};S.sessions.push(se);linkSlot(se,sessDisc(se));toast(se.ck?'Séance créée · créneau du planning coché':'Séance créée')},
+  delsess(q){ask('Supprimer cette séance ?',()=>{const z=sess(q.id);if(z)unlinkSlot(z);S.sessions=S.sessions.filter(s=>s.id!=q.id);render()},'Supprimer');return'x'},
   pick(q){openPicker(q.id||null);return'x'},
   pkm(q){pk.m=q.v;pkRender();return'x'},
   pkadd(q){const se=sess(D.sid);if(!se)return'x';const m=exMode(q.n);se.ex.push({n:q.n,mode:m,sets:[blankSet(m)],note:''});toast(q.n+' ajouté');render();pkRender();return'x'},
@@ -1716,7 +1831,7 @@ document.addEventListener('click',e=>{if(e.target.matches&&e.target.matches('[da
 
 /* ===== Saisies ===== */
 /* Re-rendu sans casser TAB : on laisse le focus se poser, puis on le restaure sur le même champ */
-const FK=['id','data-f','data-du','data-g','data-gu','data-gs','data-st','data-ex','data-sx','data-h','data-ck','data-tg','data-gl','data-gb','data-gt','data-md','data-ce'];
+const FK=['id','data-f','data-du','data-g','data-gu','data-gs','data-st','data-ex','data-sx','data-h','data-ck','data-tg','data-gl','data-gb','data-gt','data-md','data-ce','data-cx'];
 function focusKey(el){if(!el||el===document.body||!el.closest||!el.closest('#app'))return null;for(const a of FK){const v=el.getAttribute(a);if(v!=null&&v!=='')return a=='id'?'#'+CSS.escape(v):`[${a}="${CSS.escape(v)}"]`}return null}
 function renderKeep(){setTimeout(()=>{const k=focusKey(document.activeElement);render();if(k){const el=document.querySelector('#app '+k);if(el){el.focus({preventScroll:true});if(el.matches('input[type=text],input[type=number],.tm,.du'))try{el.select()}catch(x){}}}},0)}
 document.addEventListener('change',e=>{const t=e.target,d=t.dataset,l=lg(cur);
@@ -1734,6 +1849,7 @@ document.addEventListener('change',e=>{const t=e.target,d=t.dataset,l=lg(cur);
   else if(d.st){const[id,i,j,f]=d.st.split('|'),ex=sess(id).ex[+i];ex.sets[+j][f]=+t.value||0;save();const el=document.getElementById('sm'+id+'_'+i);if(el)el.innerHTML=exSum(ex);return}
   else if(d.md){const[id,i]=d.md.split('|'),ex=sess(id).ex[+i];ex.mode=t.value;ex.sets=ex.sets.map(x=>convSet(x,t.value));if(!ex.sets.length)ex.sets.push(blankSet(t.value))}
   else if(d.ex){const[id,i,k]=d.ex.split('|');sess(id).ex[+i][k]=t.value;save();return}
+  else if(d.cx){cxChange(t,d);return}
   else if(d.sx){const[id,k]=d.sx.split('|');sess(id)[k]=t.value;if(k=='note'){save();return}}
   else if(d.gb){const[i,j]=d.gb.split('|');S.guides[+i].b[+j]=t.value;save();return}
   else if(d.gt)S.guides[+d.gt].t=t.value;
@@ -1806,6 +1922,8 @@ document.addEventListener('contextmenu',e=>{if(e.target.closest('.ev'))e.prevent
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{if(!S.theme)applyTheme()});
 
 
+
+Object.assign(ACT,CX_ACT);
 
 /* ===== Import d’un planning (format du bloc PLANNING) ===== */
 const planWeek=()=>{const w0=wkStart(cur);return[w0,add(w0,6)]};
@@ -1915,6 +2033,7 @@ function setSync(s){if(s=='ok')syncErr=null;syncState=s;const el=$('#sync');if(!
 function syncParts(){const p={core:{}};CORE_KEYS.forEach(k=>p.core[k]=S[k]);
   Object.entries(S.logs).forEach(([d,l])=>{if(active(l)||l.title||l.rp||SYNC.remote['days/'+d]!==undefined)p['days/'+d]=l});
   S.sessions.forEach(z=>p['sessions/'+z.id]=z);
+  S.cardio.forEach(z=>p['cardio/'+z.id]=z);
   const out={};Object.entries(p).forEach(([k,v])=>out[k]=JSON.stringify(v));return out}
 /* Dernier état synchronisé, gardé sur l’appareil : permet de savoir ce qui a changé ici pendant une coupure */
 const BASE_KEY=KEY+'-sync';
@@ -1934,7 +2053,7 @@ async function syncPush(){if(SYNC.pushing){SYNC.again=true;return}SYNC.pushing=t
 function setLocal(k,j){const v=j==null?undefined:JSON.parse(j);
   if(k=='core'){if(v)CORE_KEYS.forEach(x=>{if(v[x]!==undefined)S[x]=v[x]})}
   else{const[c,id]=k.split('/');if(c=='days'){if(v)S.logs[id]=v;else delete S.logs[id]}
-    else{const i=S.sessions.findIndex(z=>z.id==id);if(v){if(i>=0)S.sessions[i]=v;else S.sessions.push(v)}else if(i>=0)S.sessions.splice(i,1)}}}
+    else{const A=c=='cardio'?S.cardio:S.sessions,i=A.findIndex(z=>z.id==id);if(v){if(i>=0)A[i]=v;else A.push(v)}else if(i>=0)A.splice(i,1)}}}
 function applyDoc(k,body){const j=body&&typeof body.json=='string'?body.json:null;if(j===(SYNC.remote[k]??null)||SYNC.dirty.has(k))return false;
   if(j===null)delete SYNC.remote[k];else SYNC.remote[k]=j;setLocal(k,j);saveBase();return true}
 const editing=()=>{const a=document.activeElement;return!!(a&&a.closest&&a.closest('#app')&&a.matches('input,textarea,select'))};
@@ -1959,9 +2078,9 @@ const blankCore=j=>{try{const v=JSON.parse(j);return!(v.tasks||[]).length&&!(v.f
 async function syncStart(base){
   SYNC.base=base;const slow=setTimeout(()=>{if(!SYNC.ready)setSync('slow')},10000);setSync('busy');
   try{
-    const[c,ds,ss]=await Promise.all([base.get(),base.collection('days').get(),base.collection('sessions').get()]);
+    const[c,ds,ss,cs]=await Promise.all([base.get(),base.collection('days').get(),base.collection('sessions').get(),base.collection('cardio').get()]);
     const R={};if(c.exists)R.core=c.data().json;
-    ds.docs.forEach(d=>R['days/'+d.id]=d.data().json);ss.docs.forEach(d=>R['sessions/'+d.id]=d.data().json);
+    ds.docs.forEach(d=>R['days/'+d.id]=d.data().json);ss.docs.forEach(d=>R['sessions/'+d.id]=d.data().json);cs.docs.forEach(d=>R['cardio/'+d.id]=d.data().json);
     const B=loadBase(),L=syncParts();let kept=false;
     if(Object.keys(R).length){
       new Set([...Object.keys(L),...Object.keys(R)]).forEach(k=>{const l=L[k],r=R[k];if(l===r)return;
@@ -1974,7 +2093,7 @@ async function syncStart(base){
     if(!SYNC.dirty.size)setSync('ok');
     const err=e=>failSync(e);
     base.onSnapshot(s=>{if(s.metadata.fromCache||s.metadata.hasPendingWrites)return;if(applyDoc('core',s.exists?s.data():null))remoteChanged()},err);
-    ['days','sessions'].forEach(col=>base.collection(col).onSnapshot(q=>{let ch=false;q.docChanges().forEach(x=>{const m=x.doc.metadata;if(m.fromCache||m.hasPendingWrites)return;if(applyDoc(col+'/'+x.doc.id,x.type=='removed'?null:x.doc.data()))ch=true});if(ch)remoteChanged()},err));
+    ['days','sessions','cardio'].forEach(col=>base.collection(col).onSnapshot(q=>{let ch=false;q.docChanges().forEach(x=>{const m=x.doc.metadata;if(m.fromCache||m.hasPendingWrites)return;if(applyDoc(col+'/'+x.doc.id,x.type=='removed'?null:x.doc.data()))ch=true});if(ch)remoteChanged()},err));
     return true
   }catch(e){clearTimeout(slow);failSync(e);return false}}
 
