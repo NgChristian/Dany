@@ -298,6 +298,10 @@ td.r,th.r{text-align:right;padding-right:0}
 
 /* Sync */
 .sync{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--mute);margin-right:4px}
+button.sync{background:none;border:0;font:inherit;font-size:12.5px;cursor:pointer;padding:8px 6px;border-radius:99px;min-height:36px}
+button.sync:hover{color:var(--ink)}
+button.sync.need{border:1px solid var(--gold-fill);color:var(--ink);padding:6px 12px 6px 10px;white-space:nowrap}
+button.sync.need svg{width:17px;height:17px;color:var(--gold-fill)}
 .sync i{width:8px;height:8px;border-radius:99px;background:var(--line2)}
 .sync.ok i{background:var(--ok)}.sync.gold i{background:var(--gold-fill)}.sync.red i{background:var(--red)}
 /* Exercise picker */
@@ -340,6 +344,10 @@ dialog h2{margin-bottom:6px}
   .addrow .btn{grid-column:1/-1}
 
   .top .lbl{display:none}
+  .top{gap:2px}.top>.btn{flex:none;padding:0 6px}
+  button.sync{min-height:28px;padding:6px}
+  button.sync.need{width:30px;height:30px;min-height:30px;padding:0;justify-content:center;flex:none}
+  button.sync.need svg{width:16px;height:16px}
   .brand{font-size:19px;white-space:nowrap}
   .pklist .res,.results .res{flex-direction:column;align-items:flex-start;gap:2px}
   .res span{white-space:normal}
@@ -362,7 +370,7 @@ dialog h2{margin-bottom:6px}
   <header class="top">
     <div class="brand"><i aria-hidden="true"></i>Life &amp; Performance</div>
     <span class="grow"></span>
-    <span id="sync" class="sync" role="status"></span>
+    <button id="sync" class="sync" type="button" data-a="acct" aria-live="polite"></button>
     <button class="btn quiet sm" data-a="goals"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg><span class="lbl">Objectifs</span></button>
     <button class="btn quiet sm" data-a="bk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v3h16v-3"/></svg><span class="lbl">Sauvegarde</span></button>
     <button class="btn quiet icon sm" data-a="th" aria-label="Basculer mode clair / sombre" id="thbtn"></button>
@@ -1800,15 +1808,23 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{if(!
 
 /* ===== Synchronisation en temps réel (PC ↔ iPhone) =====
    Données privées du compte : data/users/<id>/app (cœur) + days/<date> + sessions/<id>.
+   En ligne via Firebase (connexion e-mail + mot de passe), ou via l’espace Claude si l’app y est ouverte.
    Le stockage local reste un cache : la page s’affiche tout de suite, puis se met à jour. */
-var SYNC={base:null,remote:{},dirty:new Set(),timer:null,ready:false,pushing:false,again:false,pending:false};
+const FB_CFG={apiKey:'AIzaSyBoQvZA15HOf5jUK0Fl4p4fgwNZJiaxoRY',authDomain:'dany-ipos.firebaseapp.com',projectId:'dany-ipos',storageBucket:'dany-ipos.firebasestorage.app',messagingSenderId:'61528693141',appId:'1:61528693141:web:de257b68d288a9ba4ffe9c'};
+const FB_URL=m=>'https://www.gstatic.com/firebasejs/13.4.0/firebase-'+m+'.js';
+var SYNC={base:null,remote:{},dirty:new Set(),timer:null,ready:false,pushing:false,again:false,pending:false,uid:null,mode:'',starting:false,retry:null};
 const CORE_KEYS=['tasks','foods','bw','habits','tg','goals','guides','xlib'];
-const SYNC_TXT={local:['Sur cet appareil uniquement',''],busy:['Synchronisation…','gold'],ok:['Synchronisé','ok'],err:['Hors ligne · modifications gardées ici','red'],slow:['Connexion lente · données locales','gold']};
-function setSync(s){const el=$('#sync');if(!el)return;const[t,c]=SYNC_TXT[s];el.className='sync '+c;el.title=t;el.innerHTML=`<i></i><span class="lbl">${t}</span>`}
+const SYNC_TXT={local:['Sur cet appareil uniquement',''],login:['Se connecter','gold','Connecte-toi pour retrouver tes données sur tous tes appareils'],busy:['Synchronisation…','gold'],ok:['Synchronisé','ok'],err:['Hors ligne · modifications gardées ici','red'],slow:['Connexion lente · données locales','gold']};
+let syncState='local';
+function setSync(s){syncState=s;const el=$('#sync');if(!el)return;const[t,c,ti]=SYNC_TXT[s];el.className='sync '+c+(s=='login'?' need':'');el.title=ti||t;el.setAttribute('aria-label',ti||t);el.innerHTML=(s=='login'?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>':'<i></i>')+`<span class="lbl">${t}</span>`}
 function syncParts(){const p={core:{}};CORE_KEYS.forEach(k=>p.core[k]=S[k]);
   Object.entries(S.logs).forEach(([d,l])=>{if(active(l)||l.title||l.rp||SYNC.remote['days/'+d]!==undefined)p['days/'+d]=l});
   S.sessions.forEach(z=>p['sessions/'+z.id]=z);
   const out={};Object.entries(p).forEach(([k,v])=>out[k]=JSON.stringify(v));return out}
+/* Dernier état synchronisé, gardé sur l’appareil : permet de savoir ce qui a changé ici pendant une coupure */
+const BASE_KEY=KEY+'-sync';
+function loadBase(){try{const b=JSON.parse(localStorage.getItem(BASE_KEY));return b&&b.uid==SYNC.uid?b.r:null}catch(e){return null}}
+function saveBase(){try{localStorage.setItem(BASE_KEY,JSON.stringify({uid:SYNC.uid,r:SYNC.remote}))}catch(e){}}
 const refOf=k=>{if(k=='core')return SYNC.base;const[c,id]=k.split('/');return SYNC.base.collection(c).doc(id)};
 function syncMark(){if(!SYNC.ready)return;const p=syncParts();new Set([...Object.keys(p),...Object.keys(SYNC.remote)]).forEach(k=>{if((p[k]??null)!==(SYNC.remote[k]??null))SYNC.dirty.add(k);else SYNC.dirty.delete(k)});
   if(SYNC.dirty.size){setSync('busy');clearTimeout(SYNC.timer);SYNC.timer=setTimeout(syncPush,600)}}
@@ -1817,38 +1833,92 @@ async function syncPush(){if(SYNC.pushing){SYNC.again=true;return}SYNC.pushing=t
       if(j===null){await refOf(k).delete();delete SYNC.remote[k]}
       else{if(j.length>250000)toast('Données trop volumineuses pour la synchro : exporte une sauvegarde.');await refOf(k).set({json:j,t:Date.now()});SYNC.remote[k]=j}
       SYNC.dirty.delete(k)}
-    setSync(SYNC.dirty.size?'busy':'ok')}
-  catch(e){setSync('err');if(e&&e.code=='quota_exceeded')toast('Stockage en ligne plein : exporte une sauvegarde.');clearTimeout(SYNC.timer);SYNC.timer=setTimeout(syncPush,8000)}
+    saveBase();setSync(SYNC.dirty.size?'busy':'ok')}
+  catch(e){saveBase();setSync('err');if(e&&(e.code=='quota_exceeded'||e.code=='resource-exhausted'))toast('Stockage en ligne plein : exporte une sauvegarde.');clearTimeout(SYNC.timer);SYNC.timer=setTimeout(syncPush,8000)}
   finally{SYNC.pushing=false;if(SYNC.again){SYNC.again=false;syncPush()}}}
-function applyDoc(k,body){const j=body&&typeof body.json=='string'?body.json:null;if(j===(SYNC.remote[k]??null)||SYNC.dirty.has(k))return false;
-  if(j===null)delete SYNC.remote[k];else SYNC.remote[k]=j;const v=j===null?undefined:JSON.parse(j);
+function setLocal(k,j){const v=j==null?undefined:JSON.parse(j);
   if(k=='core'){if(v)CORE_KEYS.forEach(x=>{if(v[x]!==undefined)S[x]=v[x]})}
   else{const[c,id]=k.split('/');if(c=='days'){if(v)S.logs[id]=v;else delete S.logs[id]}
-    else{const i=S.sessions.findIndex(z=>z.id==id);if(v){if(i>=0)S.sessions[i]=v;else S.sessions.push(v)}else if(i>=0)S.sessions.splice(i,1)}}
-  return true}
+    else{const i=S.sessions.findIndex(z=>z.id==id);if(v){if(i>=0)S.sessions[i]=v;else S.sessions.push(v)}else if(i>=0)S.sessions.splice(i,1)}}}
+function applyDoc(k,body){const j=body&&typeof body.json=='string'?body.json:null;if(j===(SYNC.remote[k]??null)||SYNC.dirty.has(k))return false;
+  if(j===null)delete SYNC.remote[k];else SYNC.remote[k]=j;setLocal(k,j);saveBase();return true}
 const editing=()=>{const a=document.activeElement;return!!(a&&a.closest&&a.closest('#app')&&a.matches('input,textarea,select'))};
 function remoteChanged(){_fm=null;if(editing()){SYNC.pending=true;return}render()}
 document.addEventListener('focusout',()=>setTimeout(()=>{if(SYNC.pending&&!editing()){SYNC.pending=false;render()}},0));
-async function syncInit(){
-  if(!window.claude||typeof window.claude.use!='function'){setSync('local');return}
-  setSync('busy');const slow=setTimeout(()=>{if(!SYNC.ready)setSync('slow')},10000);
+
+/* Firebase chargé à la demande ; l’objet renvoyé imite l’interface utilisée plus haut (doc, collection, get, set, onSnapshot) */
+let FB=null;
+async function fbLoad(){if(FB)return FB;
+  const[app,au,fs]=await Promise.all([import(FB_URL('app')),import(FB_URL('auth')),import(FB_URL('firestore'))]);
+  const a=app.initializeApp(FB_CFG),auth=au.getAuth(a),db=fs.getFirestore(a);
+  const sn=s=>({exists:s.exists(),id:s.id,data:()=>s.data(),metadata:s.metadata});
+  const D=r=>({get:async()=>sn(await fs.getDoc(r)),set:v=>fs.setDoc(r,v),delete:()=>fs.deleteDoc(r),collection:c=>C(fs.collection(r,c)),onSnapshot:(cb,err)=>fs.onSnapshot(r,s=>cb(sn(s)),err)});
+  const C=r=>({doc:id=>D(fs.doc(r,id)),get:async()=>({docs:(await fs.getDocs(r)).docs.map(sn)}),onSnapshot:(cb,err)=>fs.onSnapshot(r,q=>cb({docChanges:()=>q.docChanges().map(x=>({type:x.type,doc:sn(x.doc)}))}),err)});
+  FB={auth,au,doc:p=>D(fs.doc(db,p))};return FB}
+
+/* Démarrage commun : récupère l’en-ligne puis fusionne avec ce qui a été saisi ici.
+   - clé modifiée seulement ici depuis la dernière synchro → on garde la version de l’appareil
+   - modifiée seulement en ligne → on prend l’en-ligne
+   - modifiée des deux côtés, ou premier passage de l’appareil → l’en-ligne fait foi (copie locale gardée) */
+async function syncStart(base){
+  SYNC.base=base;const slow=setTimeout(()=>{if(!SYNC.ready)setSync('slow')},10000);setSync('busy');
   try{
-    const[db,user]=await Promise.all([window.claude.use('db'),window.claude.use('user')]);const id=user?await user.id():null;
-    if(!db||!id){clearTimeout(slow);setSync('local');return}
-    SYNC.base=db.doc('data/users/'+id+'/app');
-    const[c,ds,ss]=await Promise.all([SYNC.base.get(),SYNC.base.collection('days').get(),SYNC.base.collection('sessions').get()]);
-    if(c.exists){ /* un autre appareil a déjà synchronisé : ses données font foi */
-      const cj=c.data().json;SYNC.remote.core=cj;const v=JSON.parse(cj);CORE_KEYS.forEach(x=>{if(v[x]!==undefined)S[x]=v[x]});
-      ds.docs.forEach(d=>{const j=d.data().json;SYNC.remote['days/'+d.id]=j;S.logs[d.id]=JSON.parse(j)});
-      S.sessions=ss.docs.map(d=>{const j=d.data().json;SYNC.remote['sessions/'+d.id]=j;return JSON.parse(j)});
+    const[c,ds,ss]=await Promise.all([base.get(),base.collection('days').get(),base.collection('sessions').get()]);
+    const R={};if(c.exists)R.core=c.data().json;
+    ds.docs.forEach(d=>R['days/'+d.id]=d.data().json);ss.docs.forEach(d=>R['sessions/'+d.id]=d.data().json);
+    const B=loadBase(),L=syncParts();let kept=false;
+    if(Object.keys(R).length){
+      new Set([...Object.keys(L),...Object.keys(R)]).forEach(k=>{const l=L[k],r=R[k];if(l===r)return;
+        let use;if(!B)use=r!==undefined?r:l;else{const b=B[k];use=l===b?r:r===b?l:(r!==undefined?r:l)}
+        if(use!==l){kept=true;setLocal(k,use)}});
+      if(kept){try{if(!localStorage.getItem(KEY+'-avant-synchro'))localStorage.setItem(KEY+'-avant-synchro',localStorage.getItem(KEY)||'')}catch(e){}}
       migrate();_fm=null}
-    clearTimeout(slow);SYNC.ready=true;
+    SYNC.remote=R;saveBase();clearTimeout(slow);SYNC.ready=true;
     if(editing())SYNC.pending=true;else render(); /* render → save → envoie ce qui manque en ligne */
     if(!SYNC.dirty.size)setSync('ok');
     const err=()=>setSync('err');
-    SYNC.base.onSnapshot(s=>{if(s.metadata.fromCache||s.metadata.hasPendingWrites)return;if(applyDoc('core',s.exists?s.data():null))remoteChanged()},err);
-    ['days','sessions'].forEach(col=>SYNC.base.collection(col).onSnapshot(q=>{let ch=false;q.docChanges().forEach(x=>{const m=x.doc.metadata;if(m.fromCache||m.hasPendingWrites)return;if(applyDoc(col+'/'+x.doc.id,x.type=='removed'?null:x.doc.data()))ch=true});if(ch)remoteChanged()},err));
-  }catch(e){clearTimeout(slow);setSync(SYNC.ready?'err':'local')}}
+    base.onSnapshot(s=>{if(s.metadata.fromCache||s.metadata.hasPendingWrites)return;if(applyDoc('core',s.exists?s.data():null))remoteChanged()},err);
+    ['days','sessions'].forEach(col=>base.collection(col).onSnapshot(q=>{let ch=false;q.docChanges().forEach(x=>{const m=x.doc.metadata;if(m.fromCache||m.hasPendingWrites)return;if(applyDoc(col+'/'+x.doc.id,x.type=='removed'?null:x.doc.data()))ch=true});if(ch)remoteChanged()},err));
+    return true
+  }catch(e){clearTimeout(slow);setSync('err');return false}}
+
+async function syncInit(){
+  if(window.claude&&typeof window.claude.use=='function'){SYNC.mode='claude';setSync('busy');
+    try{const[db,user]=await Promise.all([window.claude.use('db'),window.claude.use('user')]);const id=user?await user.id():null;
+      if(!db||!id){setSync('local');return}SYNC.uid=id;syncStart(db.doc('data/users/'+id+'/app'))}catch(e){setSync('local')}
+    return}
+  SYNC.mode='fb';
+  try{const F=await fbLoad();
+    F.au.onAuthStateChanged(F.auth,u=>{if(!u){if(!SYNC.ready)setSync('login');return}fbStart(u)})}
+  catch(e){setSync('err');clearTimeout(SYNC.retry);SYNC.retry=setTimeout(syncInit,20000)}}
+async function fbStart(u){if(SYNC.ready||SYNC.starting)return;SYNC.starting=true;SYNC.uid=u.uid;
+  const ok=await syncStart(FB.doc('data/users/'+u.uid+'/app'));SYNC.starting=false;
+  if(!ok){clearTimeout(SYNC.retry);SYNC.retry=setTimeout(()=>fbStart(u),20000)}}
+addEventListener('online',()=>{if(SYNC.ready||SYNC.mode!='fb')return;if(!FB)syncInit();else if(FB.auth.currentUser)fbStart(FB.auth.currentUser)});
+
+/* Fenêtre « Compte » : connexion, état, déconnexion */
+const fbErr=x=>{const c=x&&x.code||'';return/invalid-credential|wrong-password|user-not-found|invalid-email/.test(c)?'E-mail ou mot de passe incorrect.':/too-many-requests/.test(c)?'Trop d’essais : réessaie dans quelques minutes.':/network/.test(c)||!navigator.onLine?'Pas de connexion internet pour le moment.':'Connexion impossible, réessaie.'};
+function acctDlg(){const u=FB&&FB.auth.currentUser,top=`<div class="dlg-top"><h2>Synchronisation</h2><button class="btn quiet icon sm" data-a="cdlg" aria-label="Fermer">${ICON.x}</button></div>`;
+  if(SYNC.mode=='claude'||u){dlg.innerHTML=top+`<p class="mu sm">${u?'Connecté avec <b>'+esc(u.email||'')+'</b>. ':''}Tes saisies sont enregistrées en ligne et apparaissent sur tous tes appareils connectés.</p><p style="margin-top:12px"><span class="sync ${SYNC_TXT[syncState][1]}"><i></i>${SYNC_TXT[syncState][0]}</span></p><div class="dlg-actions">${u?'<button class="btn ghost" data-a="logout" style="margin-right:auto">Se déconnecter</button>':''}<button class="btn" data-a="cdlg">Fermer</button></div>`}
+  else{dlg.innerHTML=top+`<p class="mu sm">Connecte-toi pour retrouver tes données sur ton iPhone et ton ordinateur. À faire une seule fois par appareil.</p>
+<p class="mu sm" style="margin-top:8px">Première connexion : commence par l’appareil qui contient tes saisies les plus complètes.</p>
+<label class="field" style="margin-top:14px"><span>E-mail</span><input id="lg-e" type="email" autocomplete="username" autocapitalize="off" spellcheck="false" inputmode="email"></label>
+<label class="field" style="margin-top:10px"><span>Mot de passe</span><input id="lg-p" type="password" autocomplete="current-password"></label>
+<p id="lg-msg" class="sm" role="alert" style="margin-top:10px;min-height:1.4em;color:var(--red)"></p>
+<div class="dlg-actions"><button class="btn quiet" data-a="pwreset" style="margin-right:auto">Mot de passe oublié</button><button class="btn ghost" data-a="cdlg">Plus tard</button><button class="btn" id="lg-b" data-a="login">Se connecter</button></div>`;
+    dlg.querySelectorAll('#lg-e,#lg-p').forEach(i=>i.addEventListener('keydown',e=>{if(e.key=='Enter'){e.preventDefault();ACT.login()}}))}
+  dlg.showModal()}
+Object.assign(ACT,{
+  acct(){acctDlg();return'x'},
+  login(){const e=$('#lg-e').value.trim(),p=$('#lg-p').value,m=$('#lg-msg'),b=$('#lg-b');if(!e||!p){m.textContent='Renseigne ton e-mail et ton mot de passe.';return'x'}
+    b.disabled=true;m.style.color='var(--mute)';m.textContent='Connexion…';
+    (async()=>{try{const F=await fbLoad();await F.au.signInWithEmailAndPassword(F.auth,e,p);dlg.close();toast('Connecté · synchronisation en cours')}
+      catch(x){m.style.color='var(--red)';m.textContent=fbErr(x)}finally{b.disabled=false}})();return'x'},
+  pwreset(){const e=$('#lg-e').value.trim(),m=$('#lg-msg');if(!e){m.style.color='var(--red)';m.textContent='Écris d’abord ton e-mail ci-dessus.';return'x'}
+    (async()=>{try{const F=await fbLoad();await F.au.sendPasswordResetEmail(F.auth,e);m.style.color='var(--mute)';m.textContent='E-mail envoyé : suis le lien pour choisir un nouveau mot de passe.'}
+      catch(x){m.style.color='var(--red)';m.textContent=fbErr(x)}})();return'x'},
+  logout(){ask('Se déconnecter ? Tes données restent sur cet appareil, mais ne seront plus synchronisées.',async()=>{try{await FB.au.signOut(FB.auth)}catch(e){}location.reload()},'Se déconnecter');return'x'}
+});
 
 render();
 setSync('local');syncInit();
