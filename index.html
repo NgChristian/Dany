@@ -94,6 +94,9 @@ select{padding-right:8px}
 .panel-h h2{flex:1}
 .section{margin-top:28px}
 .section>h2{margin-bottom:12px}
+.blk{margin-top:36px;padding-top:24px;border-top:2px solid var(--line)}
+.blk-h{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.blk-h h2{font-size:24px}
 .empty{padding:18px;border:1px dashed var(--line2);border-radius:12px;color:var(--mute);text-align:center}
 .field{display:grid;gap:6px}
 .field>span{font-size:13px;color:var(--mute);font-weight:500}
@@ -1420,18 +1423,17 @@ function vTrain(){
   const w0=wkStart(TODAY),weeks=[...Array(8)].map((_,i)=>add(w0,-7*(7-i))),wv=weeks.map(w=>({x:dS(w),...gymStats(w,add(w,6))}));
   const pec4=gymStats(add(TODAY,-27),TODAY).pec,smo=curSessMonth(),ss=sessVisible();
   return`
-<div class="cols">
-  <section class="panel"><div class="panel-h"><h2>Nouvelle séance de muscu</h2></div><div class="row"><input type="date" id="sd" value="${cur}" aria-label="Date de la séance"><select id="st" aria-label="Type de séance">${TT.filter(t=>!CX_TYPES.includes(t)).map(t=>`<option>${t}</option>`).join('')}</select><button class="btn" data-a="newsess">Créer la séance</button><button class="btn ghost" data-a="resume" title="Copie la dernière séance du type choisi">${ICON.dup}Reprendre la dernière séance</button></div></section>
-  <section class="panel"><div class="panel-h"><h2>Poids de corps</h2><span class="mu sm">${bw.length?'Dernier : '+nf(bw[bw.length-1].y,1)+' kg':''}</span></div><div class="row"><input id="bwv" type="number" step="0.1" inputmode="decimal" placeholder="kg" aria-label="Poids en kg"><button class="btn ghost" data-a="addbw">Enregistrer au ${dS(cur)}</button></div><div style="margin-top:12px">${svgLine(bw,C.mute,' kg')}</div></section>
-</div>
+<section class="panel"><div class="panel-h"><h2>Poids de corps</h2><span class="mu sm">${bw.length?'Dernier : '+nf(bw[bw.length-1].y,1)+' kg':''}</span></div><div class="cols"><div><div class="row"><input id="bwv" type="number" step="0.1" inputmode="decimal" placeholder="kg" aria-label="Poids en kg"><button class="btn ghost" data-a="addbw">Enregistrer au ${dS(cur)}</button></div></div><div>${svgLine(bw,C.mute,' kg')}</div></div></section>
 ${vCardio()}
-<div class="cols" style="margin-top:16px">
+<div class="blk"><div class="blk-h"><h2>Muscu</h2><span class="mu sm">Séances, progression et charges</span></div>
+<div class="cols">
   <section class="panel"><div class="panel-h"><h2>Progression</h2><select data-ce aria-label="Exercice">${names.map(n=>`<option ${n==chEx?'selected':''}>${esc(n)}</option>`).join('')}</select></div><p class="mu sm">${LB[0]}</p>${svgLine(p.map(a=>({x:a.x,y:a.max})),C.gold,LB[2])}<p class="mu sm" style="margin-top:10px">${LB[1]}</p>${svgLine(p.map(a=>({x:a.x,y:a.vol})),C.red,LB[3])}</section>
   <section class="panel"><div class="panel-h"><h2>Charge par semaine</h2><span class="mu sm">8 dernières semaines</span></div><p class="mu sm">Tonnage (charges + poids de corps × reps sur les exercices lestés)</p>${svgBars(wv.map(a=>({x:a.x,y:Math.round(a.vol)})),0,' kg')}<p class="mu sm" style="margin-top:10px">Séries par semaine</p>${svgBars(wv.map(a=>({x:a.x,y:a.sets})),0,' séries')}
     <div class="row" style="margin-top:12px"><span class="mu sm">Pec droit, 4 dernières semaines :</span><span class="pill ok">RAS ${pec4.RAS||0}</span><span class="pill gold">Vigilance ${pec4.Vigilance||0}</span><span class="pill red">Gêne ${pec4['Gêne']||0}</span></div></section>
 </div>
-<section class="section">
-  <div class="panel-h"><h2>Séances</h2>${ss.length>1?`<button class="btn ghost sm" data-a="sessall" data-v="${ss.every(z=>isOpenS(z.id,ss))?'close':'open'}">${ss.every(z=>isOpenS(z.id,ss))?'Tout replier':'Tout déplier'}</button>`:''}</div>
+<section class="panel" style="margin-top:16px"><div class="panel-h"><h2>Nouvelle séance de muscu</h2></div><div class="row"><input type="date" id="sd" value="${cur}" aria-label="Date de la séance"><select id="st" aria-label="Type de séance">${TT.filter(t=>!CX_TYPES.includes(t)).map(t=>`<option>${t}</option>`).join('')}</select><button class="btn" data-a="newsess">Créer la séance</button><button class="btn ghost" data-a="resume" title="Copie la dernière séance du type choisi">${ICON.dup}Reprendre la dernière séance</button></div></section>
+<section class="section" style="margin-top:20px">
+  <div class="panel-h"><h2>Séances de muscu</h2>${ss.length>1?`<button class="btn ghost sm" data-a="sessall" data-v="${ss.every(z=>isOpenS(z.id,ss))?'close':'open'}">${ss.every(z=>isOpenS(z.id,ss))?'Tout replier':'Tout déplier'}</button>`:''}</div>
   <div class="fchips" role="group" aria-label="Mois" style="margin-bottom:14px">${sessMonths().map(m=>{const n=S.sessions.filter(z=>z.date.startsWith(m)).length;return`<button class="${m==smo?'on':''}" data-a="smon" data-v="${m}" ${m==smo?'aria-current="true"':''}>${monthLabel(m)} · ${n}</button>`}).join('')}</div>
   ${ss.length?ss.map(se=>!isOpenS(se.id,ss)?`<div class="panel sess-closed"><button type="button" class="sess-row" data-a="sesst" data-id="${se.id}" aria-expanded="false" aria-label="Déplier la séance ${esc(se.type)} du ${dLong(se.date)}"><span class="chev">${ICON.chev}</span><span class="sess-sum"><b>${DJ[pd(se.date).getDay()]} ${dMed(se.date)}</b> · ${esc(se.type)} · ${se.ex.length} exo${se.ex.length>1?'s':''}</span><span class="pill ${se.pec=='Gêne'?'red':se.pec=='Vigilance'?'gold':'ok'}">Pec ${esc(se.pec||'RAS')}</span></button></div>`:`<div class="panel" style="margin-bottom:12px">
     <div class="panel-h" style="margin-bottom:10px"><button type="button" class="btn quiet icon sm chev open" data-a="sesst" data-id="${se.id}" aria-expanded="true" aria-label="Replier la séance">${ICON.chev}</button><h2 class="sess-title" data-a="sesst" data-id="${se.id}">${esc(se.type)} · ${dLong(se.date)}</h2></div>
@@ -1445,12 +1447,13 @@ ${vCardio()}
     <div class="row" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line)"><button class="btn ghost" data-a="pick" data-id="${se.id}">${ICON.search}Ajouter un exercice</button></div>
   </div>`).join(''):`<div class="empty">Aucune séance en ${monthLabel(smo).toLowerCase()}.</div>`}
 </section>
-<section class="panel"><div class="panel-h"><h2>Bibliothèque d’exercices</h2><span class="mu sm">${EXO.length+S.xlib.length} exercices</span><button class="btn ghost sm" data-a="pick">${ICON.search}Parcourir</button></div>
+<section class="panel" style="margin-top:16px"><div class="panel-h"><h2>Bibliothèque d’exercices</h2><span class="mu sm">${EXO.length+S.xlib.length} exercices</span><button class="btn ghost sm" data-a="pick">${ICON.search}Parcourir</button></div>
   <div class="chips" style="margin-bottom:14px">${MUS.map(m=>`<span class="chip" style="padding-right:10px">${m} · ${EXO.filter(x=>x.m==m).length+S.xlib.filter(x=>x.m==m).length}</span>`).join('')}</div>
   <h3 style="margin-bottom:8px">Créer un exercice perso</h3>
   <div class="formgrid" style="margin-top:0"><label class="field" style="grid-column:1/-1"><span>Nom</span><input id="nl" placeholder="Ex. Rowing Technogym unilatéral"></label><label class="field"><span>Muscle</span><select id="nlm">${MUS.map(m=>`<option>${m}</option>`).join('')}</select></label><label class="field"><span>Équipement</span><select id="nle">${Object.entries(EQ).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></label><label class="field"><span>Suivi</span><select id="nlo">${Object.entries(MODEN).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></label></div>
   <div class="row" style="margin-top:12px"><button class="btn ghost" data-a="newlib">Créer l’exercice</button></div>
-  ${S.xlib.length?`<p class="mu sm" style="margin:14px 0 8px">Mes exercices</p><div class="chips">${S.xlib.map((x,i)=>`<span class="chip">${esc(x.n)} <span class="mu xs">· ${esc(x.m)} · ${MODEN[x.mode]}</span><button data-a="dellib" data-i="${i}" aria-label="Retirer ${esc(x.n)}">${ICON.x}</button></span>`).join('')}</div>`:''}</section>`}
+  ${S.xlib.length?`<p class="mu sm" style="margin:14px 0 8px">Mes exercices</p><div class="chips">${S.xlib.map((x,i)=>`<span class="chip">${esc(x.n)} <span class="mu xs">· ${esc(x.m)} · ${MODEN[x.mode]}</span><button data-a="dellib" data-i="${i}" aria-label="Retirer ${esc(x.n)}">${ICON.x}</button></span>`).join('')}</div>`:''}</section>
+</div>`}
 function setFields(id,i,j,m,st,uni){const SD=uni?'<span class="unit">/ côté</span>':'';const k=id+'|'+i+'|'+j+'|',n=(f,ph,u)=>`<input type="number" step="any" inputmode="decimal" min="0" data-st="${k}${f}" value="${st[f]??''}" placeholder="${ph}" aria-label="${ph}">${u?`<span class="unit">${u}</span>`:''}`;
   if(m=='charge')return n('w','Poids','kg')+'<span class="mu">×</span>'+n('r','Reps')+SD;
   if(m=='lest')return`<button class="btn sm ${st.pdc?'':'ghost'}" data-a="pdc" data-id="${id}" data-i="${i}" data-j="${j}" aria-pressed="${!!st.pdc}" title="Poids de corps seul">PDC</button>`+(st.pdc?'':n('l','Lest','kg'))+'<span class="mu">×</span>'+n('r','Reps')+SD;
@@ -1528,7 +1531,7 @@ function vWeek(){
   <div class="stat"><b>${A.sport.d} / ${A.sport.p}</b><span>Séances validées</span></div>
   <div class="stat"><b>${A.NF}</b><span>Tâches non faites (jours passés)</span></div>
   <div class="stat"><b>${A.RP}</b><span>Tâches reportées</span></div>
-  <div class="stat"><b>${A.cx.min?hm(A.cx.min):'–'}</b><span>Temps cardio (${A.cx.n} séance${A.cx.n>1?'s':''})</span></div>
+  <div class="stat"><b>${A.cx.min?minTxt(A.cx.min):'–'}</b><span>Temps cardio (${A.cx.n} séance${A.cx.n>1?'s':''})</span></div>
   <div class="stat"><b>${A.cx.fc?A.cx.fc+' bpm':'–'}</b><span>FC moyenne cardio</span></div>
   <div class="stat"><b>${A.cx.kcal?nf(A.cx.kcal):'–'}</b><span>kcal actives cardio</span></div>
 </div></section>
@@ -1687,6 +1690,7 @@ const sessDisc=z=>z.sp||SPM[z.type]||'Muscu';
 function linkSlot(z,disc){unlinkSlot(z);const x=occ(z.date).find(t=>t.cat=='sport'&&(t.sp||'Muscu')==disc&&!t.done[z.date]);if(x){x.done[z.date]=true;z.ck={id:x.id,d:z.date}}}
 function unlinkSlot(z){if(!z.ck)return;const x=S.tasks.find(t=>t.id==z.ck.id);if(x&&x.done)delete x.done[z.ck.d];delete z.ck}
 const daySess=d=>[...S.sessions.filter(z=>z.date==d).map(sessDisc),...S.cardio.filter(z=>z.date==d).map(z=>cxDef(z.x).d)];
+const minTxt=m=>m<60?Math.round(m)+' min':hm(m);
 function cxStats(a,b){const r={n:0,min:0,kcal:0,fw:0,fd:0,fl:[]};S.cardio.filter(z=>z.date>=a&&z.date<=b).forEach(z=>{r.n++;const du=+z.dur||0;r.min+=du;r.kcal+=+z.kcal||0;if(+z.fcm){r.fl.push(+z.fcm);if(du){r.fw+=z.fcm*du;r.fd+=du}}});r.fc=r.fd?Math.round(r.fw/r.fd):r.fl.length?Math.round(avg(r.fl)):0;return r}
 let cxOpen=null,cxMonth=null;
 const cxMonths=()=>{const s=new Set(S.cardio.map(z=>z.date.slice(0,7)));s.add(TODAY.slice(0,7));return[...s].sort().reverse()};
@@ -1700,7 +1704,7 @@ function cxField(z,k,lab,u,t){const key=z.id+'|'+k,v=k.startsWith('v.')?(z.v||{}
   const uo=t&&t.u?`<select data-cx="${z.id}|v.${t.u}" aria-label="Unité" style="width:auto;flex:none">${t.o.map(o=>`<option ${((z.v||{})[t.u]||t.o[0])==o?'selected':''}>${o}</option>`).join('')}</select>`:u?`<span class="unit">${u}</span>`:'';
   return`<label class="field"><span>${lab}</span><span class="cx-in">${inp}${uo}</span></label>`}
 function vCardio(){const ss=cxVisible(),mo=curCxMonth(),w0=wkStart(TODAY),W=cxStats(w0,add(w0,6));
-  return`<section class="section"><div class="panel-h"><h2>Cardio / Conditionnement</h2><span class="mu sm">Cette semaine : ${W.n} séance${W.n>1?'s':''}${W.min?' · '+hm(W.min):''}${W.fc?' · FC moy. '+W.fc+' bpm':''}</span></div>
+  return`<section class="blk"><div class="blk-h"><h2>Cardio / Conditionnement</h2><span class="mu sm">Cette semaine : ${W.n} séance${W.n>1?'s':''}${W.min?' · '+minTxt(W.min):''}${W.fc?' · FC moy. '+W.fc+' bpm':''}</span></div>
   <div class="panel" style="margin-bottom:14px"><div class="row"><input type="date" id="cxd" value="${cur}" aria-label="Date de la séance cardio"><select id="cxe" aria-label="Exercice cardio">${CXO.map(o=>`<option value="${o.k}">${o.n}</option>`).join('')}</select><button class="btn" data-a="newcx">Ajouter la séance cardio</button></div></div>
   <div class="fchips" role="group" aria-label="Mois" style="margin-bottom:14px">${cxMonths().map(m=>{const n=S.cardio.filter(z=>z.date.startsWith(m)).length;return`<button class="${m==mo?'on':''}" data-a="cxmon" data-v="${m}" ${m==mo?'aria-current="true"':''}>${monthLabel(m)} · ${n}</button>`}).join('')}</div>
   ${ss.length?ss.map(z=>{const D=cxDef(z.x);return!isOpenC(z.id,ss)?`<div class="panel sess-closed"><button type="button" class="sess-row" data-a="cxt" data-id="${z.id}" aria-expanded="false" aria-label="Déplier ${esc(D.n)} du ${dLong(z.date)}"><span class="chev">${ICON.chev}</span><span class="sess-sum"><b>${DJ[pd(z.date).getDay()]} ${dMed(z.date)}</b> · ${esc(D.n)}${has(z.dur)?' · '+nf(z.dur)+' min':''}${has(z.fcm)?' · '+z.fcm+' bpm':''}</span>${has(z.rpe)?`<span class="pill ${+z.rpe>=8?'red':+z.rpe>=6?'gold':'ok'}">RPE ${z.rpe}</span>`:''}</button></div>`
@@ -1740,7 +1744,7 @@ function weekRecap(w0){const w1=add(w0,6),A=agg(w0,w1),T=S.tg,C=cxStats(w0,w1),s
   const L=[`Bilan de la semaine du ${dMed(w0)} au ${dMed(w1)} ${w1.slice(0,4)}`,
     `Tâches réalisées : ${pc(A.Dn,A.P)} % (${A.Dn}/${A.P}) · heures ${nf(A.hd,1)} / ${nf(A.hp,1)} h`,
     `Séances de sport : ${sp.d} / ${sp.p}`+(()=>{const b=Object.entries(sp.by).filter(([k,v])=>v.p||v.d).map(([k,v])=>`${k} ${v.d}/${v.p}`);return b.length?' ('+b.join(', ')+')':''})(),
-    `Cardio : ${C.n} séance${C.n>1?'s':''}`+(C.min?` · ${hm(C.min)}`:'')+(C.fc?` · FC moy. ${C.fc} bpm`:'')+(C.kcal?` · ${nf(C.kcal)} kcal actives`:''),
+    `Cardio : ${C.n} séance${C.n>1?'s':''}`+(C.min?` · ${minTxt(C.min)}`:'')+(C.fc?` · FC moy. ${C.fc} bpm`:'')+(C.kcal?` · ${nf(C.kcal)} kcal actives`:''),
     `Lecture : ${nf(A.pg)} / ${T.pg*7} pages`,
     `Hydratation : ${nf(A.water/1000,1)} / ${nf(T.w*7/1000,1)} L`,
     `Pas (moy./jour) : ${nf(Math.round(avg(A.steps)))} / ${nf(T.st)}`,
