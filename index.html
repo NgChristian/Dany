@@ -363,6 +363,9 @@ dialog h2{margin-bottom:6px}
   input,select,textarea{font-size:16px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* Accès réservé aux comptes connectés */
+body.locked .shell{visibility:hidden}
+body.locked::after{content:"Chargement…";position:fixed;inset:0;display:grid;place-items:center;color:var(--mute);font:600 16px var(--body)}
 </style>
 </head>
 <body>
@@ -1651,7 +1654,7 @@ const ACT={
   new(q){openTask(null,q.d);return'x'},
   edit(q){openTask(q.id,q.d);return'x'},
   stask(){stask();return'x'},dtask(){dtask();return'x'},
-  cdlg(){dlg.close();return'x'},
+  cdlg(){if(isLocked())return'x';dlg.close();return'x'},
   cfmok(){cfm.close();const f=cfmCb;cfmCb=null;if(f)f();return'x'},
   cfmno(){cfm.close();cfmCb=null;return'x'},
   mv(q){moveOcc(q.id,q.d,add(q.d,+q.n));toast('Reportée au '+dS(add(q.d,+q.n)));return'x'},
@@ -1782,7 +1785,8 @@ function endFDrag(cancel){if(!fDrag)return;const d=fDrag;fDrag=null;if(d.over)d.
 document.addEventListener('pointerup',()=>endFDrag(false));
 document.addEventListener('pointercancel',()=>endFDrag(true));
 /* Fermeture des fenêtres au clic à l’extérieur */
-dlg.addEventListener('click',e=>{if(e.target!==dlg)return;const r=dlg.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dlg.close()});
+dlg.addEventListener('cancel',e=>{if(isLocked())e.preventDefault()});
+dlg.addEventListener('click',e=>{if(e.target!==dlg||isLocked())return;const r=dlg.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dlg.close()});
 /* Glisser-déposer des exercices via la poignée ⋮⋮ */
 let exDrag=null;
 document.addEventListener('pointerdown',e=>{const g=e.target.closest('.grip');if(!g)return;const ex=g.closest('.ex');if(!ex)return;e.preventDefault();
@@ -1974,6 +1978,16 @@ async function syncStart(base){
     return true
   }catch(e){clearTimeout(slow);failSync(e);return false}}
 
+/* ===== Un compte = ses données : rien n’est visible sans connexion ===== */
+const OWN_KEY=KEY+'-owner';
+const owner=()=>{try{return localStorage.getItem(OWN_KEY)}catch(e){return null}};
+const isLocked=()=>document.body.classList.contains('locked');
+function lockApp(){document.body.classList.add('locked');if(!dlg.open||!$('#lg-e')){acctMode=acctMode||'login';acctDlg()}}
+function unlockApp(){document.body.classList.remove('locked')}
+/* vide les données de l’appareil (une copie de secours locale est gardée) */
+function wipeLocal(){try{const cur=localStorage.getItem(KEY);if(cur)localStorage.setItem(KEY+'-avant-connexion',cur);localStorage.removeItem(KEY);localStorage.removeItem(BASE_KEY)}catch(e){}
+  S=seed();migrate();SYNC.remote={};SYNC.dirty.clear();_fm=null}
+let firstAuth=true;
 async function syncInit(){
   if(window.claude&&typeof window.claude.use=='function'){SYNC.mode='claude';setSync('busy');
     try{const[db,user]=await Promise.all([window.claude.use('db'),window.claude.use('user')]);const id=user?await user.id():null;
@@ -1981,8 +1995,15 @@ async function syncInit(){
     return}
   SYNC.mode='fb';
   try{const F=await fbLoad();
-    F.au.onAuthStateChanged(F.auth,u=>{if(!u){if(!SYNC.ready)setSync('login');return}fbStart(u)})}
-  catch(e){failSync(e);clearTimeout(SYNC.retry);SYNC.retry=setTimeout(syncInit,20000)}}
+    F.au.onAuthStateChanged(F.auth,u=>{const first=firstAuth;firstAuth=false;
+      if(!u){setSync('login');lockApp();return}
+      const o=owner();
+      /* autre compte que celui de l’appareil, ou nouvelle connexion sur un appareil sans propriétaire : on repart de zéro */
+      if(o?o!==u.uid:!first){wipeLocal();render()}
+      try{localStorage.setItem(OWN_KEY,u.uid)}catch(e){}
+      unlockApp();if(dlg.open&&$('#lg-e'))dlg.close();fbStart(u)})}
+  catch(e){failSync(e);if(owner())unlockApp(); /* hors connexion : l’appareil garde l’accès aux données de son compte */
+    clearTimeout(SYNC.retry);SYNC.retry=setTimeout(syncInit,20000)}}
 async function fbStart(u){if(SYNC.ready||SYNC.starting)return;SYNC.starting=true;SYNC.uid=u.uid;
   const ok=await syncStart(FB.doc('data/users/'+u.uid+'/app'));SYNC.starting=false;
   if(!ok){clearTimeout(SYNC.retry);SYNC.retry=setTimeout(()=>fbStart(u),20000)}}
@@ -1993,7 +2014,7 @@ const fbErr=x=>{const c=x&&x.code||'';return/email-already-in-use/.test(c)?'Un c
 let acctMode='login';
 function acctDlg(){const u=FB&&FB.auth.currentUser,top=`<div class="dlg-top"><h2>Synchronisation</h2><button class="btn quiet icon sm" data-a="cdlg" aria-label="Fermer">${ICON.x}</button></div>`;
   if(SYNC.mode=='claude'||u){dlg.innerHTML=top+`<p class="mu sm">${u?'Connecté avec <b>'+esc(u.email||'')+'</b>. ':''}Tes saisies sont enregistrées en ligne et apparaissent sur tous tes appareils connectés.</p><p style="margin-top:12px"><span class="sync ${SYNC_TXT[syncState][1]}"><i></i>${SYNC_TXT[syncState][0]}</span></p>${syncState=='err'&&syncErr?`<p class="sm" style="margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--red-soft);color:var(--ink)"><b>Détail :</b> ${esc(errInfo(syncErr))}</p>`:''}<div class="dlg-actions">${u?'<button class="btn ghost" data-a="logout" style="margin-right:auto">Se déconnecter</button>':''}<button class="btn" data-a="cdlg">Fermer</button></div>`}
-  else if(acctMode=='signup'){dlg.innerHTML=top+`<p class="mu sm">Crée ton compte pour retrouver tes données sur tous tes appareils. Ce que tu as déjà saisi sur cet appareil sera enregistré dans ce compte.</p>
+  else if(acctMode=='signup'){dlg.innerHTML=top+`<p class="mu sm">Crée ton compte pour retrouver tes données sur tous tes appareils. Un nouveau compte démarre vide : tu pourras ensuite importer ton planning ou une sauvegarde.</p>
 <label class="field" style="margin-top:14px"><span>E-mail</span><input id="lg-e" type="email" autocomplete="username" autocapitalize="off" spellcheck="false" inputmode="email"></label>
 <label class="field" style="margin-top:10px"><span>Mot de passe (6 caractères minimum)</span><input id="lg-p" type="password" autocomplete="new-password"></label>
 <label class="field" style="margin-top:10px"><span>Confirme le mot de passe</span><input id="lg-p2" type="password" autocomplete="new-password"></label>
@@ -2001,14 +2022,14 @@ function acctDlg(){const u=FB&&FB.auth.currentUser,top=`<div class="dlg-top"><h2
 <div class="dlg-actions"><button class="btn quiet" data-a="acctmode" data-m="login" style="margin-right:auto">J’ai déjà un compte</button><button class="btn ghost" data-a="cdlg">Plus tard</button><button class="btn" id="lg-b" data-a="signup">Créer mon compte</button></div>`;
     dlg.querySelectorAll('#lg-e,#lg-p,#lg-p2').forEach(i=>i.addEventListener('keydown',e=>{if(e.key=='Enter'){e.preventDefault();ACT.signup()}}))}
   else{dlg.innerHTML=top+`<p class="mu sm">Connecte-toi pour retrouver tes données sur ton iPhone et ton ordinateur. À faire une seule fois par appareil.</p>
-<p class="mu sm" style="margin-top:8px">Première connexion : commence par l’appareil qui contient tes saisies les plus complètes.</p>
 <label class="field" style="margin-top:14px"><span>E-mail</span><input id="lg-e" type="email" autocomplete="username" autocapitalize="off" spellcheck="false" inputmode="email"></label>
 <label class="field" style="margin-top:10px"><span>Mot de passe</span><input id="lg-p" type="password" autocomplete="current-password"></label>
 <p id="lg-msg" class="sm" role="alert" style="margin-top:10px;min-height:1.4em;color:var(--red)"></p>
 <p class="sm" style="margin-top:2px">Pas encore de compte ? <button class="btn quiet sm" data-a="acctmode" data-m="signup" style="padding:0 6px;min-height:28px;color:var(--red)">Créer un compte</button></p>
 <div class="dlg-actions"><button class="btn quiet" data-a="pwreset">Mot de passe oublié</button><span class="grow"></span><button class="btn ghost" data-a="cdlg">Plus tard</button><button class="btn" id="lg-b" data-a="login">Se connecter</button></div>`;
     dlg.querySelectorAll('#lg-e,#lg-p').forEach(i=>i.addEventListener('keydown',e=>{if(e.key=='Enter'){e.preventDefault();ACT.login()}}))}
-  dlg.showModal()}
+  if(isLocked()){dlg.querySelectorAll('[data-a=cdlg]').forEach(b=>b.remove());const h=dlg.querySelector('h2');if(h)h.textContent=acctMode=='signup'?'Créer un compte':'Connexion'}
+  if(!dlg.open)dlg.showModal()}
 Object.assign(ACT,{
   acct(){acctMode='login';acctDlg();return'x'},
   acctmode(q){acctMode=q.m;acctDlg();setTimeout(()=>{const i=$('#lg-e');if(i)i.focus()},50);return'x'},
@@ -2024,9 +2045,13 @@ Object.assign(ACT,{
   pwreset(){const e=$('#lg-e').value.trim(),m=$('#lg-msg');if(!e){m.style.color='var(--red)';m.textContent='Écris d’abord ton e-mail ci-dessus.';return'x'}
     (async()=>{try{const F=await fbLoad();await F.au.sendPasswordResetEmail(F.auth,e);m.style.color='var(--mute)';m.textContent='E-mail envoyé : suis le lien pour choisir un nouveau mot de passe.'}
       catch(x){m.style.color='var(--red)';m.textContent=fbErr(x)}})();return'x'},
-  logout(){ask('Se déconnecter ? Tes données restent sur cet appareil, mais ne seront plus synchronisées.',async()=>{try{await FB.au.signOut(FB.auth)}catch(e){}location.reload()},'Se déconnecter');return'x'}
+  logout(){ask('Se déconnecter ? Tes données restent en ligne dans ton compte et sont retirées de cet appareil.',async()=>{
+      try{clearTimeout(SYNC.timer);if(SYNC.dirty.size)await syncPush()}catch(e){}
+      if(SYNC.dirty.size&&!confirm('Certaines modifications n’ont pas pu être envoyées (pas de connexion). Te déconnecter quand même ? Elles seront perdues.'))return;
+      try{await FB.au.signOut(FB.auth)}catch(e){}wipeLocal();try{localStorage.removeItem(OWN_KEY)}catch(e){}location.reload()},'Se déconnecter');return'x'}
 });
 
+if(!(window.claude&&typeof window.claude.use=='function')&&!owner())document.body.classList.add('locked');
 render();
 setSync('local');syncInit();
 
