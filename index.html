@@ -1080,6 +1080,45 @@ guides:[{t:'Baki / Ippo & Hyrox',b:['Surcharge progressive propre : +1 rep ou +1
 xlib:[],
 sessions:[{id:uid(),date:'2026-11-21',type:'Upper',sp:'Muscu',pec:'RAS',note:'',ex:[SX('Tractions pronation','lest',[{l:10,pdc:false,r:7},{l:10,pdc:false,r:6}],'Record : +20 kg × 5'),SX('Chest Press Hammer Strength (plat)','charge',[{w:45,r:8},{w:45,r:8},{w:42.5,r:8},{w:37.5,r:7}]),SX('Rowing T-Bar support','charge',[{w:40,r:8},{w:35,r:8}],'+ 4 Kelso shrugs'),SX('Dips','lest',[{l:0,pdc:true,r:15}],'Record : +40 kg × 6–8'),SX('Vis-à-vis poulie milieu','charge',[{w:5,r:12},{w:5,r:12},{w:5,r:12}]),SX('Élévations latérales poulie','charge',[{w:5,r:15},{w:5,r:15},{w:5,r:12}]),SX('Triceps barre V poulie','charge',[{w:25,r:12},{w:25,r:12},{w:25,r:12}]),SX('Curl incliné haltères','charge',[{w:10,r:10},{w:10,r:10},{w:10,r:10}]),SX('Dead Hang','temps',[{t:32,l:0},{t:33,l:0}])]}]}}
 
+/* ===================== PLANNING DE LA SEMAINE =====================
+   Mis à jour chaque semaine. Changer « v » pour que l’app applique
+   le nouveau planning à la prochaine ouverture, sans toucher aux saisies.
+   tasks : créneaux ponctuels · excl : créneaux récurrents à masquer
+   days  : titre du jour + type (tr:1 entraînement, tr:0 repos sport)
+   ================================================================== */
+const PLANNING={
+  v:'2026-11-23',
+  tasks:[
+    {t:'Cardio Zone 2 – Vélo 30–45 min (125–140 bpm)',date:'2026-11-23',s:'18:15',e:'19:00',cat:'sport',sp:'Cardio'},
+    {t:'Muscu – Upper (contrôle / volume)',date:'2026-11-24',s:'18:30',e:'19:45',cat:'sport',sp:'Muscu'},
+    {t:'Retour au calme (protocole post-match)',date:'2026-11-25',s:'22:30',e:'22:50',cat:'repos',sp:'Muscu'},
+    {t:'Muscu – Lower (repos si gros match ou sommeil < 75)',date:'2026-11-26',s:'18:15',e:'19:30',cat:'sport',sp:'Muscu'},
+    {t:'Muscu – Push (lesté / contrôle, pec droit vigilant)',date:'2026-11-28',s:'10:00',e:'11:30',cat:'sport',sp:'Muscu'},
+    {t:'Muscu – Pull (lesté)',date:'2026-11-29',s:'10:00',e:'11:30',cat:'sport',sp:'Muscu'},
+    {t:'Bilan hebdo',date:'2026-11-29',s:'18:00',e:'18:30',cat:'perso',sp:'Muscu'}
+  ],
+  excl:{'Muscu – Pull':['2026-11-24'],'Muscu – Upper':['2026-11-28'],'Muscu – Lower':['2026-11-22','2026-11-29'],'Mobilité / étirements':['2026-11-26']},
+  days:{
+    '2026-11-23':{title:'Zone 2 · repos muscu',tr:0},
+    '2026-11-24':{title:'Upper · contrôle / volume',tr:1},
+    '2026-11-25':{title:'Match volley · +150–200 kcal de glucides si gros temps de jeu',tr:0},
+    '2026-11-26':{title:'Lower · bascule repos si gros match ou sommeil < 75',tr:1},
+    '2026-11-27':{title:'Volley loisir · intensité modérée',tr:0},
+    '2026-11-28':{title:'Push · pec droit vigilant',tr:1},
+    '2026-11-29':{title:'Pull lesté + bilan hebdo',tr:1}
+  }
+};
+function applyPlanning(){
+  const P=PLANNING;if(!P||S.planV===P.v)return;
+  const same=(a,b)=>a.t==b.t&&a.date==b.date&&a.s==b.s;
+  const old=S.tasks.filter(x=>x.plan);S.tasks=S.tasks.filter(x=>!x.plan);
+  P.tasks.forEach(n=>{if(S.tasks.some(x=>same(x,n)))return;const o=old.find(x=>same(x,n));
+    S.tasks.push({id:uid(),cat:'sport',sp:'Muscu',pr:2,rec:null,excl:[],...n,done:o&&o.done||{},plan:true})});
+  Object.entries(P.excl||{}).forEach(([t,ds])=>S.tasks.filter(x=>x.rec&&x.t==t).forEach(x=>{x.excl=[...new Set([...(x.excl||[]),...ds])]}));
+  Object.entries(P.days||{}).forEach(([d,v])=>{const l=S.logs[d]||(S.logs[d]={title:'',pm:'',sl:{},w:0,m:[],h:{},kO:0,st:0,pg:0,bk:'',tr:0,rp:0});Object.assign(l,v)});
+  S.planV=P.v;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+}
+
 function migrate(){
   S.foods=S.foods||[];S.bw=S.bw||{};S.goals=S.goals||[];S.guides=S.guides||[];S.sessions=S.sessions||[];S.habits=S.habits||[];S.logs=S.logs||{};
   delete S.favs; // « Repas favoris » supprimés
@@ -1097,6 +1136,7 @@ function migrate(){
   S.xlib=S.xlib||[];const known=n=>EXO.some(x=>x.n==n)||S.xlib.some(x=>x.n==n);
   (S.lib||[]).map(n=>EX_ALIAS[n]||n).forEach(n=>{if(!known(n))S.xlib.push({n,m:'Autre',e:'aut',mode:exMode(n)})});delete S.lib;
   S.sessions.forEach(z=>z.ex.forEach(e=>{if(!known(e.n))S.xlib.push({n:e.n,m:'Autre',e:'aut',mode:e.mode||exMode(e.n)})}));
+  applyPlanning();
 }
 try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 if(!S||!S.tasks)S=seed();
