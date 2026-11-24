@@ -1143,7 +1143,7 @@ function migrate(){
     if(l.lm){if(hLemon)l.h[hLemon]=true}delete l.lm; // doublon de l’habitude « Eau + citron/sel »
     if(l.co){l.m.push({s:2,n:'Eau de coco',q:330,u:'ml'})}delete l.co; // devient une vraie entrée quantifiée
   });
-  S.foods.forEach(f=>{f.caf=+f.caf||0;f.l=+f.l||0;f.pc=+f.pc||0;f.hy=f.l?1:0});
+  S.foods.forEach(f=>{f.caf=+f.caf||0;f.l=+f.l||0;f.pc=+f.pc||0;f.hy=f.l?1:0;f.pu=+f.pu||0;if(f.pu)f.ul=f.ul||'unité'});
   S.sessions.forEach(z=>(z.ex||[]).forEach(e=>{if(EX_ALIAS[e.n])e.n=EX_ALIAS[e.n];migEx(e)}));
   /* exercices perso : anciens noms hors bibliothèque + exercices de séances inconnus */
   S.xlib=S.xlib||[];const known=n=>EXO.some(x=>x.n==n)||S.xlib.some(x=>x.n==n);
@@ -1160,13 +1160,16 @@ let _fm=null,_fmSig='';
 function foodMap(){const sig=S.foods.length+':'+S.foods.map(f=>f.n).join('|');if(_fm&&sig==_fmSig)return _fm;_fm=new Map();FOODS.forEach(f=>_fm.set(f.n,f));S.foods.forEach(f=>_fm.set(f.n,{...f,cat:'Mes aliments'}));_fmSig=sig;return _fm}
 const allFoods=()=>[...foodMap().values()];
 const food=n=>foodMap().get(n)||foodMap().get(FOOD_ALIAS[n]);
-const ufac=(u,f)=>u=='L'?1000:u=='pièce'?(f.pc||100):u=='cs'?(f.cs||15):1;
+/* Aliment « à l’unité » (f.pu) : k/p/c/f/caf pour 1 unité (f.ul), poids moyen facultatif f.pc ; unité 'u' */
+const ufac=(u,f)=>u=='u'?(f.pc||1):u=='L'?1000:u=='pièce'?(f.pc||100):u=='cs'?(f.cs||15):1;
 const amt=(i,f)=>i.q*ufac(i.u,f);
-const units=f=>['g',...(f.l?['ml','L']:[]),...(f.cs?['cs']:[]),...(f.pc?['pièce']:[])];
-const uLabel=(u,f)=>u=='pièce'?`pièce (${nf(f.pc,1)} ${f.l?'ml':'g'})`:u=='cs'?`c. à soupe (${nf(f.cs,1)} ${f.l?'ml':'g'})`:u;
-const defUnit=f=>f.pc?'pièce':f.cs?'cs':f.l?'ml':'g';
-const defQty=u=>u=='pièce'||u=='cs'?1:u=='L'?0.5:u=='ml'?250:100;
-function itemMac(i){const f=food(i.n);if(!f)return{k:0,p:0,c:0,f:0,caf:0,ml:0};const g=amt(i,f),q=g/100;return{k:f.k*q,p:f.p*q,c:f.c*q,f:f.f*q,caf:(f.caf||0)*q,ml:f.hy?g:0}}
+const units=f=>f.pu?['u',...(f.pc?[f.l?'ml':'g']:[])]:['g',...(f.l?['ml','L']:[]),...(f.cs?['cs']:[]),...(f.pc?['pièce']:[])];
+const uLabel=(u,f)=>u=='u'?(f.ul||'unité')+(f.pc?` (${nf(f.pc,1)} ${f.l?'ml':'g'})`:''):u=='pièce'?`pièce (${nf(f.pc,1)} ${f.l?'ml':'g'})`:u=='cs'?`c. à soupe (${nf(f.cs,1)} ${f.l?'ml':'g'})`:u;
+const defUnit=f=>f.pu?'u':f.pc?'pièce':f.cs?'cs':f.l?'ml':'g';
+const defQty=u=>u=='u'||u=='pièce'||u=='cs'?1:u=='L'?0.5:u=='ml'?250:100;
+function itemMac(i){const f=food(i.n);if(!f)return{k:0,p:0,c:0,f:0,caf:0,ml:0};
+  if(f.pu){const n=i.u=='u'?(+i.q||0):(f.pc?(+i.q||0)/f.pc:0);return{k:f.k*n,p:f.p*n,c:f.c*n,f:f.f*n,caf:(f.caf||0)*n,ml:f.hy?n*(f.pc||0):0}}
+  const g=amt(i,f),q=g/100;return{k:f.k*q,p:f.p*q,c:f.c*q,f:f.f*q,caf:(f.caf||0)*q,ml:f.hy?g:0}}
 function mac(d){const l=S.logs[d],r={k:0,p:0,c:0,f:0,caf:0,ml:0,sup:{}};(l?l.m:[]).forEach(i=>{const m=itemMac(i);r.k+=m.k;r.p+=m.p;r.c+=m.c;r.f+=m.f;r.caf+=m.caf;r.ml+=m.ml;const f=food(i.n);if(f&&f.sup)r.sup[i.n]=(r.sup[i.n]||0)+amt(i,f)/(f.pc||1)});return r}
 function searchFoods(q){const t=norm(q).split(/\s+/).filter(Boolean);if(!t.length)return[];const out=[];allFoods().forEach(f=>{const n=norm(f.n),c=norm(f.cat);if(t.every(w=>n.includes(w)||c.includes(w))){let sc=0;if(n.startsWith(t[0]))sc-=20;if((' '+n).includes(' '+t[0]))sc-=8;if(f.cat=='Mes aliments')sc-=4;sc+=n.length/20;out.push([sc,f])}});return out.sort((a,b)=>a[0]-b[0]).slice(0,30).map(a=>a[1])}
 function recentFoods(){const out=[];for(let i=0;i<21&&out.length<8;i++){const l=S.logs[add(TODAY,-i)];if(!l)continue;[...l.m].reverse().forEach(it=>{if(out.length<8&&!out.includes(it.n)&&food(it.n))out.push(it.n)})}return out.map(food)}
@@ -1296,23 +1299,26 @@ function vNutri(){
   <div class="panel-h"><h2>Ajouter un aliment</h2><span class="mu sm">${allFoods().length} aliments</span></div>
   <div class="search">${ICON.search}<input id="fq" type="search" autocomplete="off" placeholder="Rechercher : poulet, skyr, riz cuit, café…" aria-label="Rechercher un aliment" value="${esc(pick||'')}"><div class="results" id="fres" hidden role="listbox"></div></div>
   <div class="addrow">
-    <label class="field"><span>Quantité</span><input id="fqt" type="text" data-num autocomplete="off" step="any" min="0" inputmode="decimal" placeholder="100"></label>
+    <label class="field"><span id="fqtl">Quantité</span><input id="fqt" type="text" data-num autocomplete="off" step="any" min="0" inputmode="decimal" placeholder="100"></label>
     <label class="field"><span>Unité</span><select id="fun"></select></label>
     <label class="field"><span>Repas</span><select id="fsl">${SLOTS.map((s,i)=>`<option value="${i}" ${i==addSlot?'selected':''}>${s}</option>`).join('')}</select></label>
     <button class="btn" data-a="addf">Ajouter</button>
   </div>
   <div class="preview" id="fprev"><span class="mu">Choisis un aliment pour voir ses apports.</span></div>
   <details class="more"><summary>Créer un aliment absent de la base</summary>
-    <p class="mu sm" style="margin-top:8px">Valeurs pour 100 g (ou 100 ml pour un liquide).</p>
     <div class="formgrid">
       <label class="field" style="grid-column:1/-1"><span>Nom</span><input id="cn" placeholder="Ex. Galette protéinée maison"></label>
+      <label class="field" style="grid-column:1/-1"><span>Valeurs nutritionnelles</span><select id="cref"><option value="0">Pour 100 g / 100 ml</option><option value="1">À l’unité / par portion</option></select></label>
+      <label class="field cu-only" hidden><span>Nom de l’unité</span><input id="cul" placeholder="pièce, rib, œuf, scoop, portion…"></label>
+      <label class="field cu-only" hidden><span id="cpul">Poids moyen d’1 unité (g)</span><input id="cpu" type="text" data-num autocomplete="off" inputmode="decimal" placeholder="Facultatif"></label>
+      <p class="mu sm" id="crefh" style="grid-column:1/-1;margin:2px 0 0">Valeurs pour 100 g (ou 100 ml pour un liquide).</p>
       <label class="field"><span>kcal</span><input id="ck" type="text" data-num autocomplete="off" step="any" inputmode="decimal"></label>
       <label class="field"><span>Protéines (g)</span><input id="cp" type="text" data-num autocomplete="off" step="any" inputmode="decimal"></label>
       <label class="field"><span>Glucides (g)</span><input id="cc" type="text" data-num autocomplete="off" step="any" inputmode="decimal"></label>
       <label class="field"><span>Lipides (g)</span><input id="cf" type="text" data-num autocomplete="off" step="any" inputmode="decimal"></label>
       <label class="field"><span>Caféine (mg)</span><input id="cz" type="text" data-num autocomplete="off" step="any" inputmode="decimal" placeholder="0"></label>
       <label class="field"><span>Type</span><select id="ct"><option value="0">Solide (g)</option><option value="1">Liquide (ml / L)</option></select></label>
-      <label class="field"><span>Poids d’une unité</span><input id="cu" type="text" data-num autocomplete="off" step="any" inputmode="decimal" placeholder="Facultatif"></label>
+      <label class="field c100-only"><span>Poids d’une unité</span><input id="cu" type="text" data-num autocomplete="off" step="any" inputmode="decimal" placeholder="Facultatif"></label>
     </div>
     <div class="row" style="margin-top:12px"><button class="btn" data-a="cfood">Créer l’aliment</button>${S.foods.length?`<span class="mu sm">Mes aliments : ${S.foods.map((f,i)=>`<span class="chip">${esc(f.n)}<button data-a="delcf" data-i="${i}" aria-label="Supprimer ${esc(f.n)}">${ICON.x}</button></span>`).join(' ')}</span>`:''}</div>
   </details>
@@ -1324,7 +1330,9 @@ function fillAdder(){const f=pick?food(pick):null,u=$('#fun'),q=$('#fqt');if(!u)
   if(!f){u.innerHTML='<option>g</option>';u.disabled=true;q.value='';$('#fprev').innerHTML='<span class="mu">Choisis un aliment pour voir ses apports.</span>';return}
   u.disabled=false;const un=units(f);if(!un.includes(addUnit))addUnit=defUnit(f);
   u.innerHTML=un.map(x=>`<option value="${x}" ${x==addUnit?'selected':''}>${esc(uLabel(x,f))}</option>`).join('');
-  if(!q.value)q.value=defQty(addUnit);preview()}
+  if(!q.value)q.value=defQty(addUnit);qtyLabel();preview()}
+function qtyLabel(){const f=pick?food(pick):null,el=$('#fqtl'),q=$('#fqt');if(!el)return;const u=$('#fun').value;
+  if(f&&u=='u'){const w=f.ul||'unité';el.textContent='Nombre de '+(/[sxz]$/i.test(w)||/\s/.test(w)?w:w+'s');q.placeholder='1';}else{el.textContent='Quantité';q.placeholder=u=='ml'?'250':'100'}}
 function preview(){const f=pick?food(pick):null,el=$('#fprev');if(!el||!f)return;const qt=+$('#fqt').value||0,x=itemMac({n:pick,q:qt,u:$('#fun').value});
   el.innerHTML=`<span><b>${esc(f.n)}</b> <span class="mu">· ${esc(f.cat)}</span></span><span><b>${nf(x.k)}</b> kcal</span><span>P <b>${nf(x.p,1)}</b> g</span><span>G <b>${nf(x.c,1)}</b> g</span><span>L <b>${nf(x.f,1)}</b> g</span>${x.caf?`<span>Caféine <b>${nf(x.caf)}</b> mg</span>`:''}${x.ml?`<span>Hydratation <b>${nf(x.ml)}</b> ml</span>`:''}`}
 function showResults(){const box=$('#fres'),inpEl=$('#fq');if(!box)return;const q=inpEl.value.trim();let list,head='';
@@ -1332,7 +1340,7 @@ function showResults(){const box=$('#fres'),inpEl=$('#fq');if(!box)return;const 
   if(!list.length){box.innerHTML=q?`<div class="resh">Aucun aliment trouvé. Crée-le dans « Créer un aliment absent de la base ».</div>`:'';box.hidden=!q;return}
   resIdx=Math.min(resIdx,list.length-1);
   const hl=n=>{if(!q)return esc(n);const t=norm(q).split(/\s+/).filter(Boolean),nn=norm(n);let out='',i=0;const marks=new Array(n.length).fill(0);t.forEach(w=>{let p=nn.indexOf(w);if(p>=0)for(let k=p;k<p+w.length;k++)marks[k]=1});for(;i<n.length;i++)out+=marks[i]&&!marks[i-1]?'<mark>'+esc(n[i]):(!marks[i]&&marks[i-1]?'</mark>'+esc(n[i]):esc(n[i]));if(marks[n.length-1])out+='</mark>';return out};
-  box.innerHTML=head+list.map((f,i)=>`<button type="button" class="res ${i==resIdx?'act':''}" role="option" data-a="pickf" data-n="${esc(f.n)}"><b>${hl(f.n)}</b><span>${esc(f.cat)} · ${nf(f.k)} kcal · P ${nf(f.p,1)}${f.pc?' · 1 pièce = '+nf(f.pc,1)+(f.l?' ml':' g'):''}</span></button>`).join('');box.hidden=false}
+  box.innerHTML=head+list.map((f,i)=>`<button type="button" class="res ${i==resIdx?'act':''}" role="option" data-a="pickf" data-n="${esc(f.n)}"><b>${hl(f.n)}</b><span>${esc(f.cat)} · ${nf(f.k)} kcal · P ${nf(f.p,1)}${f.pu?' pour 1 '+esc(f.ul):f.pc?' · 1 pièce = '+nf(f.pc,1)+(f.l?' ml':' g'):''}</span></button>`).join('');box.hidden=false}
 function choose(n){pick=n;addUnit=null;const q=$('#fq');if(q)q.value=n;$('#fres').hidden=true;$('#fqt').value='';fillAdder();const qt=$('#fqt');qt.focus();qt.select()}
 
 /* ===== Training : modèle de données ===== */
@@ -1792,7 +1800,7 @@ const ACT={
     if(!units(f).includes(u))return toast('Cette unité n’existe pas pour cet aliment.'),'x';
     l.m.push({s:addSlot,n:f.n,q:qt,u});addUnit=u;toast(f.n+' ajouté · '+SLOTS[addSlot]);pick=null;render();const s=$('#fq');if(s&&matchMedia('(min-width:761px)').matches)s.focus();return'x'},
   delf(q,l){l.m.splice(+q.i,1)},
-  cfood(){const n=$('#cn').value.trim();if(!n)return toast('Donne un nom à l’aliment.'),'x';if(food(n)&&!S.foods.some(f=>f.n==n))return toast('Cet aliment existe déjà dans la base.'),'x';const liq=+$('#ct').value;S.foods=S.foods.filter(f=>f.n!=n);S.foods.push({n,k:+$('#ck').value||0,p:+$('#cp').value||0,c:+$('#cc').value||0,f:+$('#cf').value||0,caf:+$('#cz').value||0,l:liq,hy:liq,pc:+$('#cu').value||0});pick=n;toast('« '+n+' » créé : choisis la quantité.')},
+  cfood(){const n=$('#cn').value.trim();if(!n)return toast('Donne un nom à l’aliment.'),'x';if(food(n)&&!S.foods.some(f=>f.n==n))return toast('Cet aliment existe déjà dans la base.'),'x';const liq=+$('#ct').value,pu=$('#cref').value=='1';if(pu&&!$('#cul').value.trim())return toast('Donne un nom à l’unité : pièce, rib, œuf, scoop…'),'x';S.foods=S.foods.filter(f=>f.n!=n);S.foods.push({n,k:+$('#ck').value||0,p:+$('#cp').value||0,c:+$('#cc').value||0,f:+$('#cf').value||0,caf:+$('#cz').value||0,l:liq,hy:liq,pc:+$((pu?'#cpu':'#cu')).value||0,...(pu?{pu:1,ul:$('#cul').value.trim()}:{})});addUnit=null;pick=n;toast('« '+n+' » créé : choisis la quantité.')},
   delcf(q){const f=S.foods[+q.i];ask('Supprimer « '+f.n+' » de tes aliments ?',()=>{S.foods.splice(+q.i,1);render()},'Supprimer');return'x'},
   /* training */
   sesst(q){const ss=sessVisible(),o=new Set(ss.filter(z=>isOpenS(z.id,ss)).map(z=>z.id));o.has(q.id)?o.delete(q.id):o.add(q.id);sessOpen=o},
@@ -1842,6 +1850,12 @@ function renderKeep(){setTimeout(()=>{const k=focusKey(document.activeElement);r
 document.addEventListener('input',e=>{const t=e.target;if(!t.matches||!t.matches('input[data-num]'))return;const v=t.value;
   let n=v.replace(/,/g,'.').replace(/[^0-9.]/g,'');const i=n.indexOf('.');if(i>=0)n=n.slice(0,i+1)+n.slice(i+1).replace(/\./g,'');
   if(n!==v){const p=Math.max(0,(t.selectionStart??v.length)-(v.length-n.length));t.value=n;try{t.setSelectionRange(p,p)}catch(x){}}},true);
+function crefSync(){const u=$('#cref')&&$('#cref').value=='1',lab=($('#cul')&&$('#cul').value.trim())||'unité';if(!$('#cref'))return;
+  document.querySelectorAll('.cu-only').forEach(e=>e.hidden=!u);document.querySelectorAll('.c100-only').forEach(e=>e.hidden=u);
+  $('#crefh').textContent=u?`Valeurs pour 1 ${lab} : kcal, protéines, glucides, lipides.`:'Valeurs pour 100 g (ou 100 ml pour un liquide).';
+  $('#cpul').textContent=`${$('#ct').value=='1'?'Volume':'Poids'} moyen d’1 ${lab} (${$('#ct').value=='1'?'ml':'g'})`}
+document.addEventListener('input',e=>{if(e.target.id=='cul')crefSync()});
+document.addEventListener('change',e=>{if(e.target.id=='cref'||e.target.id=='ct')crefSync();if(e.target.id=='fun')setTimeout(qtyLabel,0)});
 document.addEventListener('change',e=>{const t=e.target,d=t.dataset,l=lg(cur);
   if(t.matches('[data-tm]')){const v=parseTime(t.value);if(v===null){toast('Heure invalide : tape par exemple 930, 2330 ou 7h15.');t.value=d.f?(getPath(l,d.f)||''):'';return}t.value=v;if(!d.f)return}
   if(t.matches('[data-nav]')){if(t.value){cur=t.value}}
