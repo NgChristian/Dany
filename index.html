@@ -70,7 +70,7 @@ button,input,select,textarea{font:inherit;color:var(--ink)}
 .btn svg{width:18px;height:18px}
 :is(.btn,input,select,textarea,summary):focus-visible{outline:2px solid var(--red);outline-offset:2px}
 input,select,textarea{background:var(--raise);border:1px solid var(--line2);border-radius:10px;min-height:40px;padding:0 12px;max-width:100%}
-input[type=number]{width:88px;font-variant-numeric:tabular-nums}
+input[data-num]{width:88px;font-variant-numeric:tabular-nums}
 input[type=time]{width:120px}
 input[type=date]{width:160px}
 textarea{width:100%;padding:10px 12px;min-height:90px;line-height:1.45}
@@ -1189,7 +1189,7 @@ function streak(k,mx){let n=0,d=cur;while((S.logs[d]||{})[k]>=mx){n++;d=add(d,-1
 const pct=(v,mx)=>Math.max(0,Math.min(100,v/Math.max(mx,1)*100));
 const bar=(v,mx,inv)=>{const p=pct(v,mx),c=inv?(v>mx?'over':''):(v>=mx?'full':'');return`<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="${Math.round(mx)}" aria-valuenow="${Math.round(v)}"><i class="${c}" style="width:${p}%"></i></div>`};
 function getPath(o,p){return p.split('.').reduce((v,k)=>v==null?'':v[k],o)}
-const inp=(p,o={})=>{const v=getPath(lg(cur),p);return`<input data-f="${p}" type="${o.t||'number'}" ${o.t&&o.t!='number'?'':'inputmode="decimal" step="any" min="0"'} ${o.w?`style="width:${o.w}"`:''} ${o.ph?`placeholder="${esc(o.ph)}"`:''} ${o.lab?`aria-label="${esc(o.lab)}"`:''} value="${esc(v??'')}">`};
+const inp=(p,o={})=>{const v=getPath(lg(cur),p);return`<input data-f="${p}" type="${o.t&&o.t!='number'?o.t:'text'}" ${o.t&&o.t!='number'?'':'data-num inputmode="decimal" autocomplete="off"'} ${o.w?`style="width:${o.w}"`:''} ${o.ph?`placeholder="${esc(o.ph)}"`:''} ${o.lab?`aria-label="${esc(o.lab)}"`:''} value="${esc(v??'')}">`};
 const tmInp=(p,lab)=>`<input class="tm" data-f="${p}" data-tm type="text" inputmode="numeric" autocomplete="off" placeholder="hh:mm" aria-label="${lab}" value="${esc(getPath(lg(cur),p)||'')}">`;
 function dateBar(){return`<div class="datebar"><button class="btn ghost icon" data-a="nav" data-n="-1" aria-label="Jour précédent">${ICON.prev}</button><label class="when">${dLong(cur)}<input type="date" data-nav value="${cur}" aria-label="Choisir une date"></label><button class="btn ghost icon" data-a="nav" data-n="1" aria-label="Jour suivant">${ICON.next}</button>${cur!=TODAY?`<button class="btn quiet sm" data-a="nav" data-n="0">Revenir à aujourd’hui</button>`:''}</div>`}
 
@@ -1284,7 +1284,7 @@ function vNutri(){
   const l=lg(cur),m=mac(cur),T=tgDay(l);
   if(addSlot==null){const h=new Date().getHours();addSlot=cur!=TODAY?0:h<11?0:h<15?1:h<18?4:3}
   const slotHtml=SLOTS.map((s,si)=>{const it=l.m.map((i,ix)=>({...i,ix})).filter(i=>i.s==si);const tk=sum(it.map(i=>itemMac(i).k)),tp=sum(it.map(i=>itemMac(i).p));
-    return`<div class="panel slot" data-slot="${si}"><h3>${s}<span>${it.length?nf(tk)+' kcal · P '+nf(tp)+' g':'vide'}</span></h3>${it.length?it.map(i=>{const f=food(i.n),x=itemMac(i);return`<div class="item" data-ix="${i.ix}"><span class="grip fgrip" title="Glisser vers un autre repas" aria-hidden="true">⋮⋮</span><div class="nm"><b title="${esc(i.n)}">${esc(i.n)}</b><span>${nf(x.k)} kcal · P ${nf(x.p,1)} · G ${nf(x.c,1)} · L ${nf(x.f,1)}${x.caf?' · '+nf(x.caf)+' mg caféine':''}${f?'':' · aliment introuvable'}</span></div><div class="q"><input type="number" step="any" min="0" inputmode="decimal" data-g="${i.ix}" value="${i.q}" aria-label="Quantité">${f?`<select data-gu="${i.ix}" aria-label="Unité">${units(f).map(u=>`<option value="${u}" ${u==i.u?'selected':''}>${esc(uLabel(u,f))}</option>`).join('')}</select>`:`<span class="unit">${i.u}</span>`}<select data-gs="${i.ix}" aria-label="Déplacer vers un autre repas" title="Repas">${SLOTS.map((s2,k)=>`<option value="${k}" ${k==i.s?'selected':''}>${s2}</option>`).join('')}</select></div><button class="btn quiet icon sm del" data-a="delf" data-i="${i.ix}" aria-label="Retirer ${esc(i.n)}">${ICON.x}</button></div>`}).join(''):`<p class="mu sm">Ajoute un aliment avec la recherche ci-dessus.</p>`}</div>`}).join('');
+    return`<div class="panel slot" data-slot="${si}"><h3>${s}<span>${it.length?nf(tk)+' kcal · P '+nf(tp)+' g':'vide'}</span></h3>${it.length?it.map(i=>{const f=food(i.n),x=itemMac(i);return`<div class="item" data-ix="${i.ix}"><span class="grip fgrip" title="Glisser vers un autre repas" aria-hidden="true">⋮⋮</span><div class="nm"><b title="${esc(i.n)}">${esc(i.n)}</b><span>${nf(x.k)} kcal · P ${nf(x.p,1)} · G ${nf(x.c,1)} · L ${nf(x.f,1)}${x.caf?' · '+nf(x.caf)+' mg caféine':''}${f?'':' · aliment introuvable'}</span></div><div class="q"><input type="text" data-num autocomplete="off" step="any" min="0" inputmode="decimal" data-g="${i.ix}" value="${i.q}" aria-label="Quantité">${f?`<select data-gu="${i.ix}" aria-label="Unité">${units(f).map(u=>`<option value="${u}" ${u==i.u?'selected':''}>${esc(uLabel(u,f))}</option>`).join('')}</select>`:`<span class="unit">${i.u}</span>`}<select data-gs="${i.ix}" aria-label="Déplacer vers un autre repas" title="Repas">${SLOTS.map((s2,k)=>`<option value="${k}" ${k==i.s?'selected':''}>${s2}</option>`).join('')}</select></div><button class="btn quiet icon sm del" data-a="delf" data-i="${i.ix}" aria-label="Retirer ${esc(i.n)}">${ICON.x}</button></div>`}).join(''):`<p class="mu sm">Ajoute un aliment avec la recherche ci-dessus.</p>`}</div>`}).join('');
   return dateBar()+`
 <div class="tiles four" style="margin-top:0">
   <div class="tile"><div class="tile-h"><h3>Calories</h3><span class="pill">${l.tr?'Jour training':'Repos sport'}</span></div><div class="val"><b>${nf(m.k)}</b><span>/ ${nf(T.k)} kcal</span></div>${bar(m.k,T.k)}<p class="mu xs">Reste ${nf(Math.max(0,T.k-m.k))} kcal</p></div>
@@ -1296,7 +1296,7 @@ function vNutri(){
   <div class="panel-h"><h2>Ajouter un aliment</h2><span class="mu sm">${allFoods().length} aliments</span></div>
   <div class="search">${ICON.search}<input id="fq" type="search" autocomplete="off" placeholder="Rechercher : poulet, skyr, riz cuit, café…" aria-label="Rechercher un aliment" value="${esc(pick||'')}"><div class="results" id="fres" hidden role="listbox"></div></div>
   <div class="addrow">
-    <label class="field"><span>Quantité</span><input id="fqt" type="number" step="any" min="0" inputmode="decimal" placeholder="100"></label>
+    <label class="field"><span>Quantité</span><input id="fqt" type="text" data-num autocomplete="off" step="any" min="0" inputmode="decimal" placeholder="100"></label>
     <label class="field"><span>Unité</span><select id="fun"></select></label>
     <label class="field"><span>Repas</span><select id="fsl">${SLOTS.map((s,i)=>`<option value="${i}" ${i==addSlot?'selected':''}>${s}</option>`).join('')}</select></label>
     <button class="btn" data-a="addf">Ajouter</button>
@@ -1306,13 +1306,13 @@ function vNutri(){
     <p class="mu sm" style="margin-top:8px">Valeurs pour 100 g (ou 100 ml pour un liquide).</p>
     <div class="formgrid">
       <label class="field" style="grid-column:1/-1"><span>Nom</span><input id="cn" placeholder="Ex. Galette protéinée maison"></label>
-      <label class="field"><span>kcal</span><input id="ck" type="number" step="any" inputmode="decimal"></label>
-      <label class="field"><span>Protéines (g)</span><input id="cp" type="number" step="any" inputmode="decimal"></label>
-      <label class="field"><span>Glucides (g)</span><input id="cc" type="number" step="any" inputmode="decimal"></label>
-      <label class="field"><span>Lipides (g)</span><input id="cf" type="number" step="any" inputmode="decimal"></label>
-      <label class="field"><span>Caféine (mg)</span><input id="cz" type="number" step="any" inputmode="decimal" placeholder="0"></label>
+      <label class="field"><span>kcal</span><input id="ck" type="text" data-num autocomplete="off" step="any" inputmode="decimal"></label>
+      <label class="field"><span>Protéines (g)</span><input id="cp" type="text" data-num autocomplete="off" step="any" inputmode="decimal"></label>
+      <label class="field"><span>Glucides (g)</span><input id="cc" type="text" data-num autocomplete="off" step="any" inputmode="decimal"></label>
+      <label class="field"><span>Lipides (g)</span><input id="cf" type="text" data-num autocomplete="off" step="any" inputmode="decimal"></label>
+      <label class="field"><span>Caféine (mg)</span><input id="cz" type="text" data-num autocomplete="off" step="any" inputmode="decimal" placeholder="0"></label>
       <label class="field"><span>Type</span><select id="ct"><option value="0">Solide (g)</option><option value="1">Liquide (ml / L)</option></select></label>
-      <label class="field"><span>Poids d’une unité</span><input id="cu" type="number" step="any" inputmode="decimal" placeholder="Facultatif"></label>
+      <label class="field"><span>Poids d’une unité</span><input id="cu" type="text" data-num autocomplete="off" step="any" inputmode="decimal" placeholder="Facultatif"></label>
     </div>
     <div class="row" style="margin-top:12px"><button class="btn" data-a="cfood">Créer l’aliment</button>${S.foods.length?`<span class="mu sm">Mes aliments : ${S.foods.map((f,i)=>`<span class="chip">${esc(f.n)}<button data-a="delcf" data-i="${i}" aria-label="Supprimer ${esc(f.n)}">${ICON.x}</button></span>`).join(' ')}</span>`:''}</div>
   </details>
@@ -1423,7 +1423,7 @@ function vTrain(){
   const w0=wkStart(TODAY),weeks=[...Array(8)].map((_,i)=>add(w0,-7*(7-i))),wv=weeks.map(w=>({x:dS(w),...gymStats(w,add(w,6))}));
   const pec4=gymStats(add(TODAY,-27),TODAY).pec,smo=curSessMonth(),ss=sessVisible();
   return`
-<section class="panel"><div class="panel-h"><h2>Poids de corps</h2><span class="mu sm">${bw.length?'Dernier : '+nf(bw[bw.length-1].y,1)+' kg':''}</span></div><div class="cols"><div><div class="row"><input id="bwv" type="number" step="0.1" inputmode="decimal" placeholder="kg" aria-label="Poids en kg"><button class="btn ghost" data-a="addbw">Enregistrer au ${dS(cur)}</button></div></div><div>${svgLine(bw,C.mute,' kg')}</div></div></section>
+<section class="panel"><div class="panel-h"><h2>Poids de corps</h2><span class="mu sm">${bw.length?'Dernier : '+nf(bw[bw.length-1].y,1)+' kg':''}</span></div><div class="cols"><div><div class="row"><input id="bwv" type="text" data-num autocomplete="off" step="0.1" inputmode="decimal" placeholder="kg" aria-label="Poids en kg"><button class="btn ghost" data-a="addbw">Enregistrer au ${dS(cur)}</button></div></div><div>${svgLine(bw,C.mute,' kg')}</div></div></section>
 ${vCardio()}
 <div class="blk"><div class="blk-h"><h2>Muscu</h2><span class="mu sm">Séances, progression et charges</span></div>
 <div class="cols">
@@ -1454,7 +1454,7 @@ ${vCardio()}
   <div class="row" style="margin-top:12px"><button class="btn ghost" data-a="newlib">Créer l’exercice</button></div>
   ${S.xlib.length?`<p class="mu sm" style="margin:14px 0 8px">Mes exercices</p><div class="chips">${S.xlib.map((x,i)=>`<span class="chip">${esc(x.n)} <span class="mu xs">· ${esc(x.m)} · ${MODEN[x.mode]}</span><button data-a="dellib" data-i="${i}" aria-label="Retirer ${esc(x.n)}">${ICON.x}</button></span>`).join('')}</div>`:''}</section>
 </div>`}
-function setFields(id,i,j,m,st,uni){const SD=uni?'<span class="unit">/ côté</span>':'';const k=id+'|'+i+'|'+j+'|',n=(f,ph,u)=>`<input type="number" step="any" inputmode="decimal" min="0" data-st="${k}${f}" value="${st[f]??''}" placeholder="${ph}" aria-label="${ph}">${u?`<span class="unit">${u}</span>`:''}`;
+function setFields(id,i,j,m,st,uni){const SD=uni?'<span class="unit">/ côté</span>':'';const k=id+'|'+i+'|'+j+'|',n=(f,ph,u)=>`<input type="text" data-num autocomplete="off" step="any" inputmode="decimal" min="0" data-st="${k}${f}" value="${st[f]??''}" placeholder="${ph}" aria-label="${ph}">${u?`<span class="unit">${u}</span>`:''}`;
   if(m=='charge')return n('w','Poids','kg')+'<span class="mu">×</span>'+n('r','Reps')+SD;
   if(m=='lest')return`<button class="btn sm ${st.pdc?'':'ghost'}" data-a="pdc" data-id="${id}" data-i="${i}" data-j="${j}" aria-pressed="${!!st.pdc}" title="Poids de corps seul">PDC</button>`+(st.pdc?'':n('l','Lest','kg'))+'<span class="mu">×</span>'+n('r','Reps')+SD;
   return n('t','Durée','s')+n('l','Lest','kg')+SD}
@@ -1648,7 +1648,7 @@ function moveOcc(id,from,to,st){const x=S.tasks.find(t=>t.id==id);if(!x)return;l
 function openEv(id,d){const x=S.tasks.find(t=>t.id==id);if(!x)return;D={id,d,x};dlg.innerHTML=`<h2>${esc(x.t)}</h2><p class="mu">${dLong(d)} · ${x.s}–${x.e}${x.cat=='sport'?' · '+esc(x.sp||'Muscu'):''} · ${PR[x.pr]}</p>${x.rec?`<div class="row" style="margin-top:12px"><label class="radio"><input type="radio" name="sc" value="one" checked> Cette occurrence</label><label class="radio"><input type="radio" name="sc" value="all"> Celle-ci et les suivantes</label></div>`:''}<div class="dlg-actions"><button class="btn danger" data-a="dtask" style="margin-right:auto">Supprimer</button><button class="btn ghost" data-a="evedit">Modifier</button><button class="btn" data-a="evok">${x.done[d]?'Annuler la validation':'Valider'}</button></div>`;dlg.showModal()}
 
 /* ===== Objectifs ===== */
-function openGoals(){const t=S.tg,f=(k,l,u)=>`<label class="field"><span>${l}</span><div class="row" style="gap:6px"><input type="number" step="any" inputmode="decimal" data-tg="${k}" value="${getPath(t,k)}" style="width:100%"><span class="unit">${u}</span></div></label>`;
+function openGoals(){const t=S.tg,f=(k,l,u)=>`<label class="field"><span>${l}</span><div class="row" style="gap:6px"><input type="text" data-num autocomplete="off" step="any" inputmode="decimal" data-tg="${k}" value="${getPath(t,k)}" style="width:100%"><span class="unit">${u}</span></div></label>`;
   dlg.innerHTML=`<h2>Objectifs</h2><p class="mu sm">Utilisés dans les compteurs du jour et les bilans.</p>
   <h3 style="margin:16px 0 8px">Quotidien</h3><div class="formgrid" style="margin:0">${f('w','Hydratation','ml')}${f('st','Pas','pas')}${f('pg','Lecture','pages')}${f('caf','Caféine max','mg')}${f('slp','Score de sommeil','/100')}${f('sh','Durée de sommeil','h')}</div>
   <h3 style="margin:18px 0 8px">Cibles macros <span class="pill gold" style="margin-left:6px">Verrouillées</span></h3>
@@ -1700,7 +1700,7 @@ const isOpenC=(id,ss)=>cxOpen?cxOpen.has(id):!!(ss[0]&&ss[0].id==id);
 function cxField(z,k,lab,u,t){const key=z.id+'|'+k,v=k.startsWith('v.')?(z.v||{})[k.slice(2)]:z[k],val=has(v)?v:'';
   if(t&&String(t).startsWith('sel:'))return`<label class="field"><span>${lab}</span><select data-cx="${key}">${['',...t.slice(4).split('|')].map(o=>`<option value="${o}" ${val==o?'selected':''}>${o||'–'}</option>`).join('')}</select></label>`;
   const inp=t=='pace'?`<input type="text" inputmode="numeric" data-cx="${key}" value="${esc(val)}" placeholder="m:ss" aria-label="${lab}">`
-    :`<input type="number" step="any" inputmode="decimal" min="${t=='r'?1:0}" ${t=='r'?'max="10"':''} data-cx="${key}" value="${val}" aria-label="${lab}">`;
+    :`<input type="text" data-num autocomplete="off" step="any" inputmode="decimal" min="${t=='r'?1:0}" ${t=='r'?'max="10"':''} data-cx="${key}" value="${val}" aria-label="${lab}">`;
   const uo=t&&t.u?`<select data-cx="${z.id}|v.${t.u}" aria-label="Unité" style="width:auto;flex:none">${t.o.map(o=>`<option ${((z.v||{})[t.u]||t.o[0])==o?'selected':''}>${o}</option>`).join('')}</select>`:u?`<span class="unit">${u}</span>`:'';
   return`<label class="field"><span>${lab}</span><span class="cx-in">${inp}${uo}</span></label>`}
 function vCardio(){const ss=cxVisible(),mo=curCxMonth(),w0=wkStart(TODAY),W=cxStats(w0,add(w0,6));
@@ -1837,13 +1837,17 @@ document.addEventListener('click',e=>{if(e.target.matches&&e.target.matches('[da
 /* Re-rendu sans casser TAB : on laisse le focus se poser, puis on le restaure sur le même champ */
 const FK=['id','data-f','data-du','data-g','data-gu','data-gs','data-st','data-ex','data-sx','data-h','data-ck','data-tg','data-gl','data-gb','data-gt','data-md','data-ce','data-cx'];
 function focusKey(el){if(!el||el===document.body||!el.closest||!el.closest('#app'))return null;for(const a of FK){const v=el.getAttribute(a);if(v!=null&&v!=='')return a=='id'?'#'+CSS.escape(v):`[${a}="${CSS.escape(v)}"]`}return null}
-function renderKeep(){setTimeout(()=>{const k=focusKey(document.activeElement);render();if(k){const el=document.querySelector('#app '+k);if(el){el.focus({preventScroll:true});if(el.matches('input[type=text],input[type=number],.tm,.du'))try{el.select()}catch(x){}}}},0)}
+function renderKeep(){setTimeout(()=>{const k=focusKey(document.activeElement);render();if(k){const el=document.querySelector('#app '+k);if(el){el.focus({preventScroll:true});if(el.matches('input[type=text],input[data-num],.tm,.du'))try{el.select()}catch(x){}}}},0)}
+/* Champs chiffrés : le clavier iPhone français tape une virgule ; on la convertit en point dès la frappe */
+document.addEventListener('input',e=>{const t=e.target;if(!t.matches||!t.matches('input[data-num]'))return;const v=t.value;
+  let n=v.replace(/,/g,'.').replace(/[^0-9.]/g,'');const i=n.indexOf('.');if(i>=0)n=n.slice(0,i+1)+n.slice(i+1).replace(/\./g,'');
+  if(n!==v){const p=Math.max(0,(t.selectionStart??v.length)-(v.length-n.length));t.value=n;try{t.setSelectionRange(p,p)}catch(x){}}},true);
 document.addEventListener('change',e=>{const t=e.target,d=t.dataset,l=lg(cur);
   if(t.matches('[data-tm]')){const v=parseTime(t.value);if(v===null){toast('Heure invalide : tape par exemple 930, 2330 ou 7h15.');t.value=d.f?(getPath(l,d.f)||''):'';return}t.value=v;if(!d.f)return}
   if(t.matches('[data-nav]')){if(t.value){cur=t.value}}
   else if(d.du){const m=parseDur(t.value);if(m===null||m>24*60){toast('Durée invalide : tape par exemple 116 (1 h 16) ou 45 (45 min).');t.value=durTxt(l.sl[d.du]);return}l.sl[d.du]={h:Math.floor(m/60),m:m%60}}
   else if(d.gs!==undefined)l.m[+d.gs].s=+t.value
-  else if(d.f){const p=d.f.split('.'),v=t.type=='number'?(t.value===''?'':+t.value):t.value;let o=l;p.slice(0,-1).forEach(k=>o=o[k]=o[k]||{});o[p[p.length-1]]=v}
+  else if(d.f){const p=d.f.split('.'),v=t.hasAttribute('data-num')?(t.value===''?'':+t.value):t.value;let o=l;p.slice(0,-1).forEach(k=>o=o[k]=o[k]||{});o[p[p.length-1]]=v}
   else if(d.ck){const x=S.tasks.find(z=>z.id==d.ck);x.done[d.d]=t.checked}
   else if(d.h!==undefined)l.h[d.h]=t.checked;
   else if(d.g!==undefined)l.m[+d.g].q=+t.value||0;
