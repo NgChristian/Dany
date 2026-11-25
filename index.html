@@ -212,9 +212,20 @@ td{padding:10px 8px 10px 0;border-bottom:1px solid var(--line);font-variant-nume
 tr:last-child td{border-bottom:0}
 td.r,th.r{text-align:right;padding-right:0}
 .tbl{overflow-x:auto}
-.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+.musl{display:grid;gap:8px}
+.musl{max-width:760px}
+.mus-r{display:grid;grid-template-columns:110px 1fr 38px 100px;align-items:center;gap:10px;font-size:13.5px}
+.mus-n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mus-t{position:relative;height:12px;border-radius:99px;background:var(--surface);overflow:hidden}
+.mus-z{position:absolute;top:0;bottom:0;background:var(--ok-soft);box-shadow:inset 1px 0 0 var(--ok),inset -1px 0 0 var(--ok)}
+.mus-f{position:absolute;left:0;top:3px;bottom:3px;border-radius:99px;background:var(--mute)}
+.mus-f.ok{background:var(--ok)}.mus-f.gold{background:var(--gold-fill)}.mus-f.red{background:var(--red)}
+.mus-v{text-align:right;font-variant-numeric:tabular-nums}
+.mus-s{font-size:12px;color:var(--mute);white-space:nowrap}.mus-s.ok{color:var(--ok)}.mus-s.gold{color:var(--gold)}.mus-s.red{color:var(--red)}
+@media (max-width:520px){.ph-sub{flex-basis:100%;margin-left:42px;margin-top:-8px}.kpis{grid-template-columns:1fr 1fr}.mus-r{grid-template-columns:78px 1fr 30px 74px;gap:7px;font-size:12.5px}.mus-s{font-size:11px}}
 .kpis>div{background:var(--surface);border-radius:12px;padding:10px 12px;min-width:0}
-.kpis span{display:block;font-size:12px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpis span{display:block;font-size:12px;color:var(--mute);line-height:1.25}
 .kpis b{display:block;font:700 20px/1.2 var(--cond);margin-top:4px;font-variant-numeric:tabular-nums}
 .kpis b.up{color:var(--ok)}.kpis b.down{color:var(--red)}
 .lc{position:relative;height:170px;margin:26px 10px 30px}
@@ -1426,22 +1437,38 @@ function barChart(p,c){const mx=Math.max(1,...p.map(a=>a.y));return`<div class="
 const kgT=v=>v>=1000?nf(v/1000,1)+' t':nf(Math.round(v))+' kg';
 const dlt=(a,b,u='',d=1)=>{const x=a-b;return(x>0?'+':x<0?'−':'±')+nf(Math.abs(x),d)+u};
 const dPct=(a,b)=>b?(a>=b?'+':'−')+Math.round(Math.abs(a-b)/b*100)+' %':'';
+let progTrack=null;
 function progPanel(names,occs,cm){
   const sel=`<select data-ce aria-label="Exercice">${names.map(n=>`<option ${n==chEx?'selected':''}>${esc(n)}</option>`).join('')}</select>`;
-  const all=occs.map(a=>{const st=statEx(a.e);return{d:a.z.date,f:exForce(a.e,a.z.date),max:st.max,vol:st.vol,best:bestSet(a.e,a.z.date)}}),last=all[all.length-1],prev=all[all.length-2];
-  const tm=cm=='temps',key=tm?'max':'f',fmt=v=>tm?nf(v)+' s':nf(v,1)+' kg';
-  const ev=last&&prev?dlt(last[key],prev[key],tm?' s':' kg'):'–';
-  if(folded('prog'))return`<section class="panel"><div class="panel-h" style="margin:0">${foldBtn('prog','Progression')}<h2 data-a="fold" data-k="prog" style="cursor:pointer">Progression</h2><span class="mu sm">${last?esc(chEx)+' · '+fmt(last[key])+(prev?' ('+ev+')':''):''}</span></div></section>`;
-  if(!last)return`<section class="panel"><div class="panel-h">${foldBtn('prog','Progression')}<h2>Progression</h2>${sel}</div><div class="empty">Pas encore de séance avec cet exercice.</div></section>`;
-  const rec=all.reduce((b,a)=>!b||a[key]>b[key]?a:b,null),p=all.slice(-8).map(a=>({x:dS(a.d),y:a[key],t:fmt(a[key])}));
-  const title=tm?'Meilleure durée':'Force estimée',info=tm?'':`<p class="mu xs" style="margin-top:6px">Force estimée = ce que tu pourrais soulever une fois, calculé sur ta meilleure série (charge × reps)${cm=='lest'?', poids du corps compris':''}. Elle monte aussi quand tu fais plus de reps à la même charge.</p>`;
-  return`<section class="panel"><div class="panel-h">${foldBtn('prog','Progression')}<h2>Progression</h2>${sel}</div>
-  <div class="kpis"><div><span>${title} · ${dS(last.d)}</span><b>${fmt(last[key])}</b></div><div><span>Record · ${dS(rec.d)}</span><b>${fmt(rec[key])}</b></div><div><span>Vs précédente</span><b class="${prev?(last[key]>prev[key]?'up':last[key]<prev[key]?'down':''):''}">${ev}</b></div></div>
-  ${p.length>1?`<p class="mu sm" style="margin-top:14px">${title} par séance${occs.length>8?' (8 dernières)':''}</p>${lineChart(p,C.red)}`:`<p class="mu sm" style="margin-top:14px">Encore une séance avec cet exercice pour voir ta courbe.</p>`}
-  ${tm?'':`<p class="sm" style="margin-top:12px">Meilleure série dernière séance : <b>${last.best}</b>${cm=='charge'?` · charge max <b>${nf(last.max,1)} kg</b>`:''}</p>`}
-  <p class="sm" style="margin-top:4px">${cm=='temps'?'Durée totale':cm=='lest'?'Reps totales':'Volume'} dernière séance : <b>${cm=='charge'?nf(Math.round(last.vol))+' kg':cm=='lest'?nf(last.vol)+' reps':nf(last.vol)+' s'}</b>${prev&&prev.vol?` <span class="mu">(${dPct(last.vol,prev.vol)} vs séance d’avant)</span>`:''}</p>${info}</section>`}
+  const head=`<div class="panel-h">${foldBtn('prog','Progression')}<h2>Progression</h2>${sel}</div>`;
+  let all=occs.map(a=>{const st=statEx(a.e),P=exPerf(a.e)||{k:'c',v:0};return{d:a.z.date,k:P.k,v:P.v,max:st.max,vol:st.vol,best:bestSet(a.e)}});
+  /* exercices au poids du corps : deux suivis, lesté (force) et poids du corps (reps max) */
+  const lt=cm=='lest',hasL=all.some(a=>a.k=='l'),hasB=all.some(a=>a.k=='b'),both=lt&&hasL&&hasB;
+  const trk=lt?(both?(progTrack&&all.some(a=>a.k==progTrack)?progTrack:all[all.length-1].k):(hasL?'l':'b')):null;
+  const other=both?all.filter(a=>a.k!=trk).slice(-1)[0]:null;
+  if(lt)all=all.filter(a=>a.k==trk);
+  const last=all[all.length-1],prev=all[all.length-2],K=last&&last.k;
+  const fmt=v=>K=='t'?nf(v)+' s':K=='b'?nf(v)+' reps':nf(v,1)+' kg',du=K=='t'?' s':K=='b'?' reps':' kg';
+  const ev=last&&prev?dlt(last.v,prev.v,du,K=='b'||K=='t'?0:1):'–';
+  if(folded('prog'))return`<section class="panel"><div class="panel-h" style="margin:0">${foldBtn('prog','Progression')}<h2 data-a="fold" data-k="prog" style="cursor:pointer">Progression</h2><span class="mu sm">${last?esc(chEx)+' · '+fmt(last.v)+(prev?' ('+ev+')':''):''}</span></div></section>`;
+  if(!last)return`<section class="panel">${head}<div class="empty">Pas encore de séance avec cet exercice.</div></section>`;
+  const old=all.filter(a=>a.d<=add(last.d,-21)&&a.d>=add(last.d,-42)).sort((a,b)=>Math.abs(pd(a.d)-pd(add(last.d,-28)))-Math.abs(pd(b.d)-pd(add(last.d,-28))))[0],tr=old&&old.v?Math.round((last.v-old.v)/old.v*1000)/10:null;
+  const rec=all.reduce((b,a)=>!b||a.v>b.v?a:b,null),p=all.slice(-8).map(a=>({x:dS(a.d),y:a.v,t:fmt(a.v)}));
+  const title={t:'Meilleure durée',b:'Reps max sur une série',l:'Force estimée (lesté)',c:'Force estimée'}[K];
+  const tabs=both?`<div class="fchips" role="group" aria-label="Type de séance" style="margin:-4px 0 12px"><button class="${trk=='l'?'on':''}" data-a="ptrk" data-v="l">Lesté</button><button class="${trk=='b'?'on':''}" data-a="ptrk" data-v="b">Poids du corps</button></div>`:'';
+  const info=K=='l'?`Force estimée = ce que tu pourrais soulever une fois (poids du corps + lest), calculé sur ta meilleure série avec ton poids actuel (${nf(bwNow(),1)} kg) : perdre du poids ne fait pas baisser la courbe. Comparée uniquement aux séances lestées.`
+    :K=='b'?'Séances sans lest : on suit le maximum de reps sur une série, comparé uniquement aux séances au poids du corps.'
+    :K=='c'?'Force estimée = ce que tu pourrais soulever une fois, calculé sur ta meilleure série (charge × reps). Elle monte aussi quand tu fais plus de reps à la même charge.':'';
+  return`<section class="panel">${head}${tabs}
+  <div class="kpis"><div><span>${K=='b'?'Reps max':title} · ${dS(last.d)}</span><b>${fmt(last.v)}</b></div><div><span>Record · ${dS(rec.d)}</span><b>${fmt(rec.v)}</b></div><div><span>Vs précédente${lt?(K=='l'?' lestée':' au PDC'):''}</span><b class="${prev?(last.v>prev.v?'up':last.v<prev.v?'down':''):''}">${ev}</b></div><div title="${old?'Comparé à la séance du '+dS(old.d):'Il faut une séance d’il y a 3 à 6 semaines'}"><span>Sur 4 semaines${old?' · '+dS(old.d):''}</span><b class="${tr>0?'up':tr<0?'down':''}">${tr==null?'–':(tr>0?'+':tr<0?'−':'±')+nf(Math.abs(tr),1)+' %'}</b></div></div>
+  ${p.length>1?`<p class="mu sm" style="margin-top:14px">${title} par séance${all.length>8?' (8 dernières)':''}</p>${lineChart(p,K=='b'?C.mute:C.red)}`:`<p class="mu sm" style="margin-top:14px">Encore une séance${lt?(K=='l'?' lestée':' au poids du corps'):''} avec cet exercice pour voir ta courbe.</p>`}
+  ${K=='t'?'':`<p class="sm" style="margin-top:12px">Meilleure série dernière séance : <b>${last.best}</b>${K=='c'?` · charge max <b>${nf(last.max,1)} kg</b>`:''}</p>`}
+  <p class="sm" style="margin-top:4px">${K=='t'?'Durée totale':lt?'Reps totales':'Volume'} dernière séance : <b>${K=='c'?nf(Math.round(last.vol))+' kg':lt?nf(last.vol)+' reps':nf(last.vol)+' s'}</b>${prev&&prev.vol?` <span class="mu">(${dPct(last.vol,prev.vol)} vs séance d’avant)</span>`:''}</p>
+  ${other?`<p class="sm" style="margin-top:4px">Dernière séance ${other.k=='l'?'lestée':'au poids du corps'} : <b>${other.best}</b> le ${dS(other.d)}</p>`:''}
+  ${info?`<p class="mu xs" style="margin-top:6px">${info}</p>`:''}</section>`}
 /* meilleure série (celle qui donne la force estimée la plus haute) */
-function bestSet(e,d){if(e.mode=='temps')return'';let b=null,bf=-1;e.sets.forEach(s=>{const f=e.mode=='charge'?e1(+s.w||0,+s.r||0):e1((bwAt(d)||0)+(s.pdc?0:+s.l||0),+s.r||0);if(f>bf){bf=f;b=s}});if(!b)return'';
+function bestSet(e){if(e.mode=='temps'||!e.sets.length)return'';const P=exPerf(e),bw=bwNow();let b=null,bf=-1;
+  e.sets.forEach(s=>{const f=e.mode=='charge'?e1(+s.w||0,+s.r||0):P.k=='b'?+s.r||0:e1(bw+(s.pdc?0:+s.l||0),+s.r||0);if(f>bf){bf=f;b=s}});if(!b)return'';
   return e.mode=='charge'?`${nf(+b.w||0,1)} kg × ${+b.r||0}`:`${b.pdc||!+b.l?'PDC':'+'+nf(+b.l,1)+' kg'} × ${+b.r||0}`}
 /* Tonnage d’une semaine, exercice par exercice (exercices en durée à part) */
 function tonWeek(a){const b=add(a,6),m=new Map(),tm=[];S.sessions.filter(z=>z.date>=a&&z.date<=b).sort((x,y)=>x.date.localeCompare(y.date)).forEach(z=>z.ex.forEach(e=>{
@@ -1451,6 +1478,14 @@ function tonWeek(a){const b=add(a,6),m=new Map(),tm=[];S.sessions.filter(z=>z.da
 /* ===== Comparaisons justes =====
    Force estimée (formule d’Epley) : charge × (1 + reps / 30), sur la meilleure série ; pour les exercices au poids du corps, charge = poids du corps + lest. */
 const e1=(w,r)=>r>0&&w>0?w*(r==1?1:1+r/30):0;
+/* Exercices au poids du corps : séance « lestée » dès qu’une série est lestée (force estimée calculée avec le poids du corps ACTUEL,
+   pour que perdre du poids ne fasse pas baisser la courbe) ; sinon « poids du corps », suivie en reps max sur une série.
+   On ne compare jamais une séance lestée avec une séance au poids du corps. */
+const bwNow=()=>{const k=Object.keys(S.bw).sort();return k.length?+S.bw[k[k.length-1]]||0:0};
+const isLested=e=>e.sets.some(s=>!s.pdc&&+s.l>0);
+function exPerf(e){if(!e.sets.length)return null;if(e.mode=='temps')return{k:'t',v:Math.max(0,...e.sets.map(s=>+s.t||0))};
+  if(e.mode=='lest'){if(isLested(e)){const b=bwNow();return{k:'l',v:Math.max(0,...e.sets.map(s=>e1(b+(s.pdc?0:+s.l||0),+s.r||0)))}}return{k:'b',v:Math.max(0,...e.sets.map(s=>+s.r||0))}}
+  return{k:'c',v:Math.max(0,...e.sets.map(s=>e1(+s.w||0,+s.r||0)))}}
 function exForce(e,d){if(e.mode=='temps')return 0;return Math.max(0,...e.sets.map(s=>e.mode=='charge'?e1(+s.w||0,+s.r||0):e1((bwAt(d)||0)+(s.pdc?0:+s.l||0),+s.r||0)))}
 function exTon(e,d){if(e.mode=='temps')return{t:0,r:0,s:0};const U=e.uni?2:1;let t=0,r=0;e.sets.forEach(s=>{r+=U*(+s.r||0);t+=e.mode=='charge'?U*(+s.w||0)*(+s.r||0):U*((bwAt(d)||0)+(s.pdc?0:+s.l||0))*(+s.r||0)});return{t,r,s:e.sets.length}}
 /* tonnage par exercice sur une liste de séances */
@@ -1458,12 +1493,39 @@ const exMap=ss=>{const m=new Map();ss.forEach(z=>z.ex.forEach(e=>{if(e.mode=='te
 /* écart « à exercices égaux » : seuls les exercices présents des deux côtés comptent */
 function likeFor(A,B){let a=0,b=0,n=0;A.forEach((o,k)=>{const q=B.get(k);if(q&&q.t&&o.t){a+=o.t;b+=q.t;n++}});return n?{a,b,n,p:Math.round((a-b)/b*100)}:null}
 /* force estimée max par exercice sur une liste de séances */
-const forceMap=ss=>{const m=new Map();ss.forEach(z=>z.ex.forEach(e=>{const f=exForce(e,z.date);if(f)m.set(e.n,Math.max(m.get(e.n)||0,f))}));return m};
+const forceMap=ss=>{const m=new Map();ss.forEach(z=>z.ex.forEach(e=>{const P=exPerf(e);if(!P||!P.v||P.k=='t')return;const k=e.n+'|'+P.k;m.set(k,Math.max(m.get(k)||0,P.v))}));return m};
+const perfPct=(A,B,n)=>{for(const k of['c','l','b']){const a=A.get(n+'|'+k),b=B.get(n+'|'+k);if(a&&b)return{p:Math.round((a-b)/b*1000)/10}}return null};
 /* évolution moyenne de la force sur les exercices en commun : ne dépend ni du nombre de séries ni du choix des exercices */
 function forceCmp(A,B){const x=[];A.forEach((f,k)=>{const g=B.get(k);if(g)x.push((f-g)/g*100)});return x.length?{p:Math.round(avg(x)*10)/10,n:x.length}:null}
 const pctTag=p=>`<span class="evo ${p>0?'up':p<0?'down':''}">${p>0?'+':p<0?'−':'±'}${nf(Math.abs(p),Math.abs(p)<10&&p%1?1:0)} %</span>`;
 /* record de force sur un exercice d’une séance (par rapport à toutes les séances d’avant) */
-function isRecord(se,e){const f=exForce(e,se.date);if(!f)return false;const prev=S.sessions.filter(z=>z.date<se.date||(z.date==se.date&&String(z.id)<String(se.id))).flatMap(z=>z.ex.filter(x=>x.n==e.n).map(x=>exForce(x,z.date)));return prev.length>0&&f>Math.max(...prev)+1e-9}
+function isRecord(se,e){const P=exPerf(e);if(!P||!P.v||P.k=='t')return false;const prev=S.sessions.filter(z=>z.date<se.date||(z.date==se.date&&String(z.id)<String(se.id))).flatMap(z=>z.ex.filter(x=>x.n==e.n).map(exPerf)).filter(q=>q&&q.k==P.k).map(q=>q.v);return prev.length>0&&P.v>Math.max(...prev)+1e-9}
+/* ===== Séries par muscle (cible 10–16 séries / muscle / semaine, référentiel) =====
+   Muscle principal déduit du groupe de la bibliothèque et du nom : 1 série ; muscles d’appoint : ½ série. Rien n’est stocké. */
+const MUSC=[['Pectoraux',1],['Dos',1],['Épaules',1],['Biceps',1],['Triceps',1],['Quadriceps',1],['Ischios',1],['Fessiers',1],['Mollets',1],['Abdos / Core',0],['Avant-bras',0],['Adducteurs',0]];
+function exMuscles(n){const x=exInfo(n),g=x&&x.m,t=n.toLowerCase(),M={};const add=(m,v)=>M[m]=(M[m]||0)+v;
+  if(!g||g=='Hyrox / Cardio'||g=='Autre')return null;
+  if(g=='Bras'){if(/poignet|wrist|inversé|reverse|dead hang|farmer|grip/.test(t))add('Avant-bras',1);else if(/curl/.test(t))add('Biceps',1);else add('Triceps',1)}
+  else if(g=='Jambes'){if(/mollet|calf/.test(t))add('Mollets',1);else if(/adducteur/.test(t))add('Adducteurs',1);else if(/hip thrust|fessier|abducteur|kickback/.test(t)){add('Fessiers',1);if(/hip thrust/.test(t))add('Ischios',.5)}
+    else if(/leg curl|roumain|soulevé de terre|good morning|nordic/.test(t)){add('Ischios',1);if(!/leg curl|nordic/.test(t))add('Fessiers',.5)}
+    else{add('Quadriceps',1);if(!/leg extension/.test(t))add('Fessiers',.5)}}
+  else if(g=='Pectoraux'){add('Pectoraux',1);if(!/vis-à-vis|écarté|pec deck|fly|butterfly|pull-over|pectoral/.test(t))add('Triceps',.5)}
+  else if(g=='Épaules'){add('Épaules',1);if(/press|développé|militaire|arnold/.test(t))add('Triceps',.5)}
+  else if(g=='Dos'){add('Dos',1);if(/traction|tirage|row|pulldown|lat /.test(t)&&!/shrug|face pull|pull-over/.test(t))add('Biceps',.5)}
+  else add(g,1);
+  return M}
+function musWeek(a){const b=add(a,6),R={},un=new Set();S.sessions.filter(z=>z.date>=a&&z.date<=b).forEach(z=>z.ex.forEach(e=>{if(!e.sets.length)return;const M=exMuscles(e.n);if(!M){if((exInfo(e.n)||{}).m!='Hyrox / Cardio')un.add(e.n);return}Object.entries(M).forEach(([m,v])=>R[m]=(R[m]||0)+v*e.sets.length)}));return{R,un:[...un]}}
+function musPanel(){const cw=wkStart(TODAY);if(!tonW||tonW>cw)tonW=cw;const isCur=tonW==cw,{R,un}=musWeek(tonW),tot=sum(Object.values(R));
+  const st=(v,tg)=>!tg?['','']:v>16?['red','au-dessus']:v>=10?['ok','dans la cible']:[isCur?'':'gold',isCur?'à compléter':'en dessous'];
+  if(folded('mus')){const inT=MUSC.filter(([m,tg])=>tg&&(R[m]||0)>=10&&(R[m]||0)<=16).length,nT=MUSC.filter(([,tg])=>tg).length;
+    return`<section class="panel"><div class="panel-h" style="margin:0">${foldBtn('mus','Séries par muscle')}<h2 data-a="fold" data-k="mus" style="cursor:pointer">Séries par muscle</h2><span class="mu sm">${dMed(tonW)}${isCur?' (en cours)':''} : ${inT}/${nT} muscles dans la cible</span></div></section>`}
+  const mx=Math.max(20,...Object.values(R).map(v=>v+2)),P=v=>Math.min(100,v/mx*100);
+  return`<section class="panel"><div class="panel-h">${foldBtn('mus','Séries par muscle')}<h2>Séries par muscle</h2><span class="mu sm ph-sub">Semaine du ${dMed(tonW)}${isCur?' · en cours':''}</span></div>
+  ${tot?`<div class="musl">${MUSC.filter(([m,tg])=>tg||R[m]).map(([m,tg])=>{const v=R[m]||0,[c,l]=st(v,tg);return`<div class="mus-r"><span class="mus-n">${m}</span><span class="mus-t">${tg?`<span class="mus-z" style="left:${P(10)}%;width:${P(16)-P(10)}%"></span>`:''}<span class="mus-f ${c}" style="width:${P(v)}%"></span></span><b class="mus-v">${nf(v,1)}</b><span class="mus-s ${c}">${l}</span></div>`}).join('')}</div>
+  <p class="mu xs" style="margin-top:10px">Zone claire : cible de 10 à 16 séries par muscle et par semaine. Chaque série compte 1 pour le muscle principal et ½ pour les muscles qui aident (ex. triceps sur un développé, biceps sur un tirage).${isCur?' Semaine en cours : la cible s’atteint d’ici dimanche.':''}</p>
+  ${un.length?`<p class="mu xs" style="margin-top:4px">Non classés (exercices perso sans muscle) : ${un.map(esc).join(', ')}.</p>`:''}`
+  :`<div class="empty">Aucune série de muscu cette semaine${isCur?' pour l’instant':''}.</div>`}</section>`}
+
 /* Tonnage d’une séance (mêmes règles) */
 function tonSess(z){let t=0,r=0,n=0;z.ex.forEach(e=>{if(e.mode=='temps')return;const U=e.uni?2:1;e.sets.forEach(s=>{const q=U*(+s.r||0);r+=q;n++;t+=e.mode=='charge'?U*(+s.w||0)*(+s.r||0):U*((bwAt(z.date)||0)+(s.pdc?0:+s.l||0))*(+s.r||0)})});return{t,r,s:n}}
 /* séance précédente du même type (Upper avec Upper…) */
@@ -1483,19 +1545,19 @@ function tonPanel(pec4){const cw=wkStart(TODAY);if(!tonW||tonW>cw)tonW=cw;const 
   const Pt=sum([...Mp.values()].map(o=>o.t)),LW=forceCmp(forceMap(curS),forceMap(prvS)),Fc=forceMap(curS),Fp=forceMap(prvS),per=isCur?` (${DJ[1].toLowerCase()} → ${DJ[pd(TODAY).getDay()].toLowerCase()})`:'';
   const weeks=[...Array(8)].map((_,i)=>add(tonW,-7*(7-i))).map(w=>{const t=tonWeek(w).T.t;return{x:dS(w),y:t,t:kgT(t),cur:w==cw}});
   const ss=curS.map(z=>({z,...tonSess(z)})).filter(o=>o.r).sort((a,b)=>a.z.date.localeCompare(b.z.date));
-  const cmpCell=(fc,raw)=>`${fc?`<span class="xs mu">force</span> ${pctTag(fc.p)}`:'<span class="mu xs">exos différents</span>'}<span class="mu xs" style="display:block">volume ${raw||'–'}</span>`;
+  const cmpCell=(fc,raw)=>`${fc?`<span class="xs mu">force</span> ${pctTag(fc.p)}`:'<span class="mu xs" title="Aucun exercice comparable : exercices différents, ou séance lestée face à une séance au poids du corps">non comparable</span>'}<span class="mu xs" style="display:block">volume ${raw||'–'}</span>`;
   let head,body;
   if(tonMode=='sess'){head=`<tr><th>Séance</th><th class="r">Tonnage</th><th class="r">Séries</th><th class="r">Reps</th><th class="r">Vs préc.</th></tr>`;
     body=ss.map(o=>{const pv=prevSame(o.z),pt=pv?tonSess(pv):null,lf=pv?forceCmp(forceMap([o.z]),forceMap([pv])):null;
       return`<tr><td><b>${esc(o.z.type)}</b><span class="mu" style="display:block">${DJ[pd(o.z.date).getDay()]} ${dS(o.z.date)}</span>${pv?`<span class="mu xs" style="display:block">vs ${dS(pv.date)}${lf?` · ${lf.n} exo${lf.n>1?'s':''} en commun`:''}</span>`:''}</td><td class="r">${nf(Math.round(o.t))}</td><td class="r">${o.s}</td><td class="r">${nf(o.r)}</td><td class="r">${pv?cmpCell(lf,dPct(o.t,pt.t)):'<span class="mu">nouveau</span>'}</td></tr>`}).join('')}
   else{head=`<tr><th>Exercice</th><th class="r">Tonnage</th><th class="r">Reps</th><th class="r">Kg / rep</th><th class="r">Vs sem. −1</th></tr>`;
-    body=W.rows.map(o=>{const q=Mp.get(o.n);return`<tr><td>${esc(o.n)}</td><td class="r">${nf(Math.round(o.t))}</td><td class="r">${nf(o.r)}</td><td class="r">${o.r?nf(o.t/o.r,1):'–'}</td><td class="r">${q&&q.t?cmpCell(Fp.get(o.n)&&Fc.get(o.n)?{p:Math.round((Fc.get(o.n)-Fp.get(o.n))/Fp.get(o.n)*1000)/10}:null,dPct(o.t,q.t)):'<span class="mu">nouveau</span>'}</td></tr>`}).join('')}
+    body=W.rows.map(o=>{const q=Mp.get(o.n);return`<tr><td>${esc(o.n)}</td><td class="r">${nf(Math.round(o.t))}</td><td class="r">${nf(o.r)}</td><td class="r">${o.r?nf(o.t/o.r,1):'–'}</td><td class="r">${q&&q.t?cmpCell(perfPct(Fc,Fp,o.n),dPct(o.t,q.t)):'<span class="mu">nouveau</span>'}</td></tr>`}).join('')}
   const totCmp=Pt?cmpCell(LW,dPct(T.t,Pt)):'';
   return`<section class="panel"><div class="panel-h">${foldBtn('ton','Tonnage')}<h2>Tonnage</h2><div class="fchips" role="group" aria-label="Affichage"><button class="${tonMode=='sess'?'on':''}" data-a="tonm" data-v="sess">Par séance</button><button class="${tonMode=='ex'?'on':''}" data-a="tonm" data-v="ex">Par exercice</button></div></div>
   <div class="row" style="margin-bottom:10px"><button class="btn ghost icon sm" data-a="tonw" data-n="-1" aria-label="Semaine précédente">${ICON.prev}</button><b style="flex:1;text-align:center">Semaine du ${dMed(tonW)}${isCur?' · en cours':''}</b><button class="btn ghost icon sm" data-a="tonw" data-n="1" aria-label="Semaine suivante" ${isCur?'disabled':''}>${ICON.next}</button></div>
   ${W.rows.length?`<div class="tbl"><table class="ton"><thead>${head}</thead><tbody>${body}
   <tr class="tot"><td>Total semaine</td><td class="r t1">${nf(Math.round(T.t))} kg</td>${tonMode=='sess'?`<td class="r t2">${T.s}</td><td class="r t2">${nf(T.r)}</td>`:`<td class="r t2">${nf(T.r)}</td><td class="r mu">–</td>`}<td class="r">${totCmp}</td></tr></tbody></table></div>
-  <p class="mu xs" style="margin-top:8px">${tonMode=='sess'?'« Vs préc. » : comparaison avec la séance précédente du même type (Upper avec Upper…).':'« Vs sem. −1 » : comparaison avec le même exercice la semaine d’avant.'} <b>Force</b> = évolution moyenne de la force estimée sur les exercices faits des deux côtés : elle ne dépend ni du nombre de séries ni des exercices ajoutés ou retirés. <b>Volume</b> = écart de tonnage brut. Total : semaine d’avant${per}.</p>`
+  <p class="mu xs" style="margin-top:8px">${tonMode=='sess'?'« Vs préc. » : comparaison avec la séance précédente du même type (Upper avec Upper…).':'« Vs sem. −1 » : comparaison avec le même exercice la semaine d’avant.'} <b>Force</b> = évolution moyenne de la force estimée sur les exercices faits des deux côtés : elle ne dépend ni du nombre de séries ni des exercices ajoutés ou retirés, et une séance lestée n’est jamais comparée à une séance au poids du corps. <b>Volume</b> = écart de tonnage brut. Total : semaine d’avant${per}.</p>`
   :`<div class="empty">Aucune série de muscu cette semaine${isCur?' pour l’instant':''}.</div>`}
   ${W.tm.length?`<p class="mu xs" style="margin-top:6px">En durée, non comptés : ${W.tm.map(esc).join(', ')}.</p>`:''}
   <p class="mu sm" style="margin-top:16px">Tonnage des 8 dernières semaines</p>${barChart(weeks,C.red)}
@@ -1553,6 +1615,7 @@ ${vCardio()}
   ${progPanel(names,occs,cm)}
   ${tonPanel(pec4)}
 </div>
+<div style="margin-top:16px">${musPanel()}</div>
 <section class="panel" style="margin-top:16px"><div class="panel-h"><h2>Nouvelle séance de muscu</h2></div><div class="row"><input type="date" id="sd" value="${cur}" aria-label="Date de la séance"><select id="st" aria-label="Type de séance">${TT.filter(t=>!CX_TYPES.includes(t)).map(t=>`<option>${t}</option>`).join('')}</select><button class="btn" data-a="newsess">Créer la séance</button><button class="btn ghost" data-a="resume" title="Copie la dernière séance du type choisi">${ICON.dup}Reprendre la dernière séance</button></div></section>
 <section class="section" style="margin-top:20px">
   <div class="panel-h"><h2>Séances de muscu</h2>${ss.length>1?`<button class="btn ghost sm" data-a="sessall" data-v="${ss.every(z=>isOpenS(z.id,ss))?'close':'open'}">${ss.every(z=>isOpenS(z.id,ss))?'Tout replier':'Tout déplier'}</button>`:''}</div>
@@ -1981,7 +2044,7 @@ document.addEventListener('change',e=>{const t=e.target,d=t.dataset,l=lg(cur);
   else if(d.g!==undefined)l.m[+d.g].q=+t.value||0;
   else if(d.gu!==undefined){const it=l.m[+d.gu],f=food(it.n),g=amt(it,f);it.u=t.value;it.q=r1(g/ufac(it.u,f))}
   else if(d.tg){const p=d.tg.split('.');if(p.length==2)return;if(p.length==2)S.tg[p[0]][p[1]]=+t.value||0;else S.tg[p[0]]=+t.value||0}
-  else if(d.ce!==undefined)chEx=t.value;
+  else if(d.ce!==undefined){chEx=t.value;progTrack=null}
   else if(d.st){const[id,i,j,f]=d.st.split('|'),ex=sess(id).ex[+i];ex.sets[+j][f]=+t.value||0;save();const el=document.getElementById('sm'+id+'_'+i);if(el)el.innerHTML=exSum(ex);return}
   else if(d.md){const[id,i]=d.md.split('|'),ex=sess(id).ex[+i];ex.mode=t.value;ex.sets=ex.sets.map(x=>convSet(x,t.value));if(!ex.sets.length)ex.sets.push(blankSet(t.value))}
   else if(d.ex){const[id,i,k]=d.ex.split('|');sess(id).ex[+i][k]=t.value;save();return}
@@ -2059,7 +2122,7 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{if(!
 
 
 
-Object.assign(ACT,CX_ACT,{tonw(q){tonW=add(tonW||wkStart(TODAY),7*+q.n)},tonm(q){tonMode=q.v},
+Object.assign(ACT,CX_ACT,{ptrk(q){progTrack=q.v},tonw(q){tonW=add(tonW||wkStart(TODAY),7*+q.n)},tonm(q){tonMode=q.v},
   fold(q){FOLD.has(q.k)?FOLD.delete(q.k):FOLD.add(q.k);try{localStorage.setItem(FOLD_KEY,JSON.stringify([...FOLD]))}catch(e){}}});
 
 /* ===== Import d’un planning (format du bloc PLANNING) ===== */
