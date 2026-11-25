@@ -1427,24 +1427,43 @@ const kgT=v=>v>=1000?nf(v/1000,1)+' t':nf(Math.round(v))+' kg';
 const dlt=(a,b,u='',d=1)=>{const x=a-b;return(x>0?'+':x<0?'−':'±')+nf(Math.abs(x),d)+u};
 const dPct=(a,b)=>b?(a>=b?'+':'−')+Math.round(Math.abs(a-b)/b*100)+' %':'';
 function progPanel(names,occs,cm){
-  const fmt=v=>cm=='lest'?(v?'+'+nf(v,1)+' kg':'PDC'):cm=='temps'?nf(v)+' s':nf(v,1)+' kg';
-  const p=occs.slice(-8).map(a=>{const s=statEx(a.e);return{x:dS(a.z.date),y:s.max,t:fmt(s.max),vol:s.vol,d:a.z.date}});
-  const all=occs.map(a=>({...statEx(a.e),d:a.z.date})),last=all[all.length-1],prev=all[all.length-2];
-  const rec=all.reduce((b,a)=>!b||a.max>b.max||(a.max==b.max&&a.vol>b.vol)?a:b,null);
-  const lbl={charge:['Charge max','Volume (kg × reps)',v=>nf(Math.round(v))+' kg'],lest:['Lest max','Reps totales',v=>nf(v)+' reps'],temps:['Meilleure durée','Durée totale',v=>nf(v)+' s']}[cm];
   const sel=`<select data-ce aria-label="Exercice">${names.map(n=>`<option ${n==chEx?'selected':''}>${esc(n)}</option>`).join('')}</select>`;
-  const ev=last&&prev?dlt(last.max,prev.max,cm=='temps'?' s':' kg'):'–';
-  if(folded('prog'))return`<section class="panel"><div class="panel-h" style="margin:0">${foldBtn('prog','Progression')}<h2 data-a="fold" data-k="prog" style="cursor:pointer">Progression</h2><span class="mu sm">${last?esc(chEx)+' · '+fmt(last.max)+(prev?' ('+ev+')':''):''}</span></div></section>`;
+  const all=occs.map(a=>{const st=statEx(a.e);return{d:a.z.date,f:exForce(a.e,a.z.date),max:st.max,vol:st.vol,best:bestSet(a.e,a.z.date)}}),last=all[all.length-1],prev=all[all.length-2];
+  const tm=cm=='temps',key=tm?'max':'f',fmt=v=>tm?nf(v)+' s':nf(v,1)+' kg';
+  const ev=last&&prev?dlt(last[key],prev[key],tm?' s':' kg'):'–';
+  if(folded('prog'))return`<section class="panel"><div class="panel-h" style="margin:0">${foldBtn('prog','Progression')}<h2 data-a="fold" data-k="prog" style="cursor:pointer">Progression</h2><span class="mu sm">${last?esc(chEx)+' · '+fmt(last[key])+(prev?' ('+ev+')':''):''}</span></div></section>`;
   if(!last)return`<section class="panel"><div class="panel-h">${foldBtn('prog','Progression')}<h2>Progression</h2>${sel}</div><div class="empty">Pas encore de séance avec cet exercice.</div></section>`;
+  const rec=all.reduce((b,a)=>!b||a[key]>b[key]?a:b,null),p=all.slice(-8).map(a=>({x:dS(a.d),y:a[key],t:fmt(a[key])}));
+  const title=tm?'Meilleure durée':'Force estimée',info=tm?'':`<p class="mu xs" style="margin-top:6px">Force estimée = ce que tu pourrais soulever une fois, calculé sur ta meilleure série (charge × reps)${cm=='lest'?', poids du corps compris':''}. Elle monte aussi quand tu fais plus de reps à la même charge.</p>`;
   return`<section class="panel"><div class="panel-h">${foldBtn('prog','Progression')}<h2>Progression</h2>${sel}</div>
-  <div class="kpis"><div><span>Dernière · ${dS(last.d)}</span><b>${fmt(last.max)}</b></div><div><span>Record · ${dS(rec.d)}</span><b>${fmt(rec.max)}</b></div><div><span>Vs précédente</span><b class="${prev?(last.max>prev.max?'up':last.max<prev.max?'down':''):''}">${ev}</b></div></div>
-  ${p.length>1?`<p class="mu sm" style="margin-top:14px">${lbl[0]} par séance${occs.length>8?' (8 dernières)':''}</p>${lineChart(p,C.red)}`:`<p class="mu sm" style="margin-top:14px">Encore une séance avec cet exercice pour voir ta courbe.</p>`}
-  <p class="sm" style="margin-top:12px">${lbl[1]} dernière séance : <b>${lbl[2](last.vol)}</b>${prev&&prev.vol?` <span class="mu">(${dPct(last.vol,prev.vol)} vs séance d’avant)</span>`:''}</p></section>`}
+  <div class="kpis"><div><span>${title} · ${dS(last.d)}</span><b>${fmt(last[key])}</b></div><div><span>Record · ${dS(rec.d)}</span><b>${fmt(rec[key])}</b></div><div><span>Vs précédente</span><b class="${prev?(last[key]>prev[key]?'up':last[key]<prev[key]?'down':''):''}">${ev}</b></div></div>
+  ${p.length>1?`<p class="mu sm" style="margin-top:14px">${title} par séance${occs.length>8?' (8 dernières)':''}</p>${lineChart(p,C.red)}`:`<p class="mu sm" style="margin-top:14px">Encore une séance avec cet exercice pour voir ta courbe.</p>`}
+  ${tm?'':`<p class="sm" style="margin-top:12px">Meilleure série dernière séance : <b>${last.best}</b>${cm=='charge'?` · charge max <b>${nf(last.max,1)} kg</b>`:''}</p>`}
+  <p class="sm" style="margin-top:4px">${cm=='temps'?'Durée totale':cm=='lest'?'Reps totales':'Volume'} dernière séance : <b>${cm=='charge'?nf(Math.round(last.vol))+' kg':cm=='lest'?nf(last.vol)+' reps':nf(last.vol)+' s'}</b>${prev&&prev.vol?` <span class="mu">(${dPct(last.vol,prev.vol)} vs séance d’avant)</span>`:''}</p>${info}</section>`}
+/* meilleure série (celle qui donne la force estimée la plus haute) */
+function bestSet(e,d){if(e.mode=='temps')return'';let b=null,bf=-1;e.sets.forEach(s=>{const f=e.mode=='charge'?e1(+s.w||0,+s.r||0):e1((bwAt(d)||0)+(s.pdc?0:+s.l||0),+s.r||0);if(f>bf){bf=f;b=s}});if(!b)return'';
+  return e.mode=='charge'?`${nf(+b.w||0,1)} kg × ${+b.r||0}`:`${b.pdc||!+b.l?'PDC':'+'+nf(+b.l,1)+' kg'} × ${+b.r||0}`}
 /* Tonnage d’une semaine, exercice par exercice (exercices en durée à part) */
 function tonWeek(a){const b=add(a,6),m=new Map(),tm=[];S.sessions.filter(z=>z.date>=a&&z.date<=b).sort((x,y)=>x.date.localeCompare(y.date)).forEach(z=>z.ex.forEach(e=>{
     if(!e.sets.length)return;if(e.mode=='temps'){tm.push(e.n);return}const U=e.uni?2:1,o=m.get(e.n)||{n:e.n,t:0,r:0,s:0};
     e.sets.forEach(s=>{const r=U*(+s.r||0);o.r+=r;o.s++;o.t+=e.mode=='charge'?U*(+s.w||0)*(+s.r||0):U*((bwAt(z.date)||0)+(s.pdc?0:+s.l||0))*(+s.r||0)});m.set(e.n,o)}));
   const rows=[...m.values()],T={t:sum(rows.map(o=>o.t)),r:sum(rows.map(o=>o.r)),s:sum(rows.map(o=>o.s))};return{rows,T,tm:[...new Set(tm)]}}
+/* ===== Comparaisons justes =====
+   Force estimée (formule d’Epley) : charge × (1 + reps / 30), sur la meilleure série ; pour les exercices au poids du corps, charge = poids du corps + lest. */
+const e1=(w,r)=>r>0&&w>0?w*(r==1?1:1+r/30):0;
+function exForce(e,d){if(e.mode=='temps')return 0;return Math.max(0,...e.sets.map(s=>e.mode=='charge'?e1(+s.w||0,+s.r||0):e1((bwAt(d)||0)+(s.pdc?0:+s.l||0),+s.r||0)))}
+function exTon(e,d){if(e.mode=='temps')return{t:0,r:0,s:0};const U=e.uni?2:1;let t=0,r=0;e.sets.forEach(s=>{r+=U*(+s.r||0);t+=e.mode=='charge'?U*(+s.w||0)*(+s.r||0):U*((bwAt(d)||0)+(s.pdc?0:+s.l||0))*(+s.r||0)});return{t,r,s:e.sets.length}}
+/* tonnage par exercice sur une liste de séances */
+const exMap=ss=>{const m=new Map();ss.forEach(z=>z.ex.forEach(e=>{if(e.mode=='temps'||!e.sets.length)return;const x=exTon(e,z.date),o=m.get(e.n)||{t:0,r:0,s:0};o.t+=x.t;o.r+=x.r;o.s+=x.s;m.set(e.n,o)}));return m};
+/* écart « à exercices égaux » : seuls les exercices présents des deux côtés comptent */
+function likeFor(A,B){let a=0,b=0,n=0;A.forEach((o,k)=>{const q=B.get(k);if(q&&q.t&&o.t){a+=o.t;b+=q.t;n++}});return n?{a,b,n,p:Math.round((a-b)/b*100)}:null}
+/* force estimée max par exercice sur une liste de séances */
+const forceMap=ss=>{const m=new Map();ss.forEach(z=>z.ex.forEach(e=>{const f=exForce(e,z.date);if(f)m.set(e.n,Math.max(m.get(e.n)||0,f))}));return m};
+/* évolution moyenne de la force sur les exercices en commun : ne dépend ni du nombre de séries ni du choix des exercices */
+function forceCmp(A,B){const x=[];A.forEach((f,k)=>{const g=B.get(k);if(g)x.push((f-g)/g*100)});return x.length?{p:Math.round(avg(x)*10)/10,n:x.length}:null}
+const pctTag=p=>`<span class="evo ${p>0?'up':p<0?'down':''}">${p>0?'+':p<0?'−':'±'}${nf(Math.abs(p),Math.abs(p)<10&&p%1?1:0)} %</span>`;
+/* record de force sur un exercice d’une séance (par rapport à toutes les séances d’avant) */
+function isRecord(se,e){const f=exForce(e,se.date);if(!f)return false;const prev=S.sessions.filter(z=>z.date<se.date||(z.date==se.date&&String(z.id)<String(se.id))).flatMap(z=>z.ex.filter(x=>x.n==e.n).map(x=>exForce(x,z.date)));return prev.length>0&&f>Math.max(...prev)+1e-9}
 /* Tonnage d’une séance (mêmes règles) */
 function tonSess(z){let t=0,r=0,n=0;z.ex.forEach(e=>{if(e.mode=='temps')return;const U=e.uni?2:1;e.sets.forEach(s=>{const q=U*(+s.r||0);r+=q;n++;t+=e.mode=='charge'?U*(+s.w||0)*(+s.r||0):U*((bwAt(z.date)||0)+(s.pdc?0:+s.l||0))*(+s.r||0)})});return{t,r,s:n}}
 /* séance précédente du même type (Upper avec Upper…) */
@@ -1456,20 +1475,27 @@ let tonW=null,tonMode='sess';
 const FOLD_KEY='lpos-ui-fold';let FOLD=(()=>{try{return new Set(JSON.parse(localStorage.getItem(FOLD_KEY))||[])}catch(e){return new Set()}})();
 const folded=k=>FOLD.has(k);
 const foldBtn=(k,lab)=>`<button type="button" class="btn quiet icon sm chev ${folded(k)?'':'open'}" data-a="fold" data-k="${k}" aria-expanded="${!folded(k)}" aria-label="${folded(k)?'Déplier':'Replier'} ${lab}">${ICON.chev}</button>`;
-function tonPanel(pec4){const cw=wkStart(TODAY);if(!tonW||tonW>cw)tonW=cw;const W=tonWeek(tonW),P=tonWeek(add(tonW,-7)),kr=o=>o.r?nf(o.t/o.r,1):'–',T=W.T,isCur=tonW==cw;
+function tonPanel(pec4){const cw=wkStart(TODAY);if(!tonW||tonW>cw)tonW=cw;const W=tonWeek(tonW),T=W.T,isCur=tonW==cw;
   if(folded('ton'))return`<section class="panel"><div class="panel-h" style="margin:0">${foldBtn('ton','Tonnage')}<h2 data-a="fold" data-k="ton" style="cursor:pointer">Tonnage</h2><span class="mu sm">${dMed(tonW)}${isCur?' (en cours)':''} : ${T.r?kgT(T.t)+' · '+nf(T.r)+' reps':'aucune série'}</span></div></section>`;
+  /* semaine d’avant : en cours de semaine, seulement les mêmes jours (lundi → aujourd’hui) */
+  const pw=add(tonW,-7),pEnd=isCur?add(pw,Math.round((pd(TODAY)-pd(tonW))/864e5)):add(pw,6),inR=(z,a,b)=>z.date>=a&&z.date<=b;
+  const curS=S.sessions.filter(z=>inR(z,tonW,add(tonW,6))),prvS=S.sessions.filter(z=>inR(z,pw,pEnd)),Mc=exMap(curS),Mp=exMap(prvS);
+  const Pt=sum([...Mp.values()].map(o=>o.t)),LW=forceCmp(forceMap(curS),forceMap(prvS)),Fc=forceMap(curS),Fp=forceMap(prvS),per=isCur?` (${DJ[1].toLowerCase()} → ${DJ[pd(TODAY).getDay()].toLowerCase()})`:'';
   const weeks=[...Array(8)].map((_,i)=>add(tonW,-7*(7-i))).map(w=>{const t=tonWeek(w).T.t;return{x:dS(w),y:t,t:kgT(t),cur:w==cw}});
-  const ss=S.sessions.filter(z=>z.date>=tonW&&z.date<=add(tonW,6)).map(z=>({z,...tonSess(z)})).filter(o=>o.r).sort((a,b)=>a.z.date.localeCompare(b.z.date));
-  const Pm=new Map(P.rows.map(o=>[o.n,o]));
-  const head=`<thead><tr><th>${tonMode=='sess'?'Séance':'Exercice'}</th><th class="r">Tonnage</th><th class="r">Reps</th><th class="r">Kg / rep</th><th class="r">${tonMode=='sess'?'Vs préc.':'Vs sem. −1'}</th></tr></thead>`;
-  const body=tonMode=='sess'
-    ?ss.map(o=>{const pv=prevSame(o.z),pt=pv?tonSess(pv):null;return`<tr><td><b>${esc(o.z.type)}</b><span class="mu" style="display:block">${DJ[pd(o.z.date).getDay()]} ${dS(o.z.date)}</span>${pv?`<span class="mu xs" style="display:block">vs ${dS(pv.date)} : ${kgT(pt.t)}</span>`:''}</td><td class="r">${nf(Math.round(o.t))}</td><td class="r">${nf(o.r)}</td><td class="r">${kr(o)}</td><td class="r">${evo(o.t,pt&&pt.t)}</td></tr>`}).join('')
-    :W.rows.map(o=>{const q=Pm.get(o.n);return`<tr><td>${esc(o.n)}</td><td class="r">${nf(Math.round(o.t))}</td><td class="r">${nf(o.r)}</td><td class="r">${kr(o)}</td><td class="r">${evo(o.t,q&&q.t)}</td></tr>`}).join('');
+  const ss=curS.map(z=>({z,...tonSess(z)})).filter(o=>o.r).sort((a,b)=>a.z.date.localeCompare(b.z.date));
+  const cmpCell=(fc,raw)=>`${fc?`<span class="xs mu">force</span> ${pctTag(fc.p)}`:'<span class="mu xs">exos différents</span>'}<span class="mu xs" style="display:block">volume ${raw||'–'}</span>`;
+  let head,body;
+  if(tonMode=='sess'){head=`<tr><th>Séance</th><th class="r">Tonnage</th><th class="r">Séries</th><th class="r">Reps</th><th class="r">Vs préc.</th></tr>`;
+    body=ss.map(o=>{const pv=prevSame(o.z),pt=pv?tonSess(pv):null,lf=pv?forceCmp(forceMap([o.z]),forceMap([pv])):null;
+      return`<tr><td><b>${esc(o.z.type)}</b><span class="mu" style="display:block">${DJ[pd(o.z.date).getDay()]} ${dS(o.z.date)}</span>${pv?`<span class="mu xs" style="display:block">vs ${dS(pv.date)}${lf?` · ${lf.n} exo${lf.n>1?'s':''} en commun`:''}</span>`:''}</td><td class="r">${nf(Math.round(o.t))}</td><td class="r">${o.s}</td><td class="r">${nf(o.r)}</td><td class="r">${pv?cmpCell(lf,dPct(o.t,pt.t)):'<span class="mu">nouveau</span>'}</td></tr>`}).join('')}
+  else{head=`<tr><th>Exercice</th><th class="r">Tonnage</th><th class="r">Reps</th><th class="r">Kg / rep</th><th class="r">Vs sem. −1</th></tr>`;
+    body=W.rows.map(o=>{const q=Mp.get(o.n);return`<tr><td>${esc(o.n)}</td><td class="r">${nf(Math.round(o.t))}</td><td class="r">${nf(o.r)}</td><td class="r">${o.r?nf(o.t/o.r,1):'–'}</td><td class="r">${q&&q.t?cmpCell(Fp.get(o.n)&&Fc.get(o.n)?{p:Math.round((Fc.get(o.n)-Fp.get(o.n))/Fp.get(o.n)*1000)/10}:null,dPct(o.t,q.t)):'<span class="mu">nouveau</span>'}</td></tr>`}).join('')}
+  const totCmp=Pt?cmpCell(LW,dPct(T.t,Pt)):'';
   return`<section class="panel"><div class="panel-h">${foldBtn('ton','Tonnage')}<h2>Tonnage</h2><div class="fchips" role="group" aria-label="Affichage"><button class="${tonMode=='sess'?'on':''}" data-a="tonm" data-v="sess">Par séance</button><button class="${tonMode=='ex'?'on':''}" data-a="tonm" data-v="ex">Par exercice</button></div></div>
   <div class="row" style="margin-bottom:10px"><button class="btn ghost icon sm" data-a="tonw" data-n="-1" aria-label="Semaine précédente">${ICON.prev}</button><b style="flex:1;text-align:center">Semaine du ${dMed(tonW)}${isCur?' · en cours':''}</b><button class="btn ghost icon sm" data-a="tonw" data-n="1" aria-label="Semaine suivante" ${isCur?'disabled':''}>${ICON.next}</button></div>
-  ${W.rows.length?`<div class="tbl"><table class="ton">${head}<tbody>${body}
-  <tr class="tot"><td>Total semaine<span class="mu xs" style="display:block;font-weight:400">${T.s} série${T.s>1?'s':''}</span></td><td class="r t1">${nf(Math.round(T.t))} kg</td><td class="r t2">${nf(T.r)}</td><td class="r t3">${kr(T)}</td><td class="r">${P.T.t?evo(T.t,P.T.t):''}</td></tr></tbody></table></div>
-  <p class="mu xs" style="margin-top:8px">${tonMode=='sess'?'« Vs préc. » : écart de tonnage avec la séance précédente du même type (Upper avec Upper…).':'« Vs sem. −1 » : écart de tonnage avec le même exercice la semaine d’avant.'} Dernière ligne : écart avec la semaine d’avant${isCur?' (semaine en cours, pas encore complète)':''}.</p>`
+  ${W.rows.length?`<div class="tbl"><table class="ton"><thead>${head}</thead><tbody>${body}
+  <tr class="tot"><td>Total semaine</td><td class="r t1">${nf(Math.round(T.t))} kg</td>${tonMode=='sess'?`<td class="r t2">${T.s}</td><td class="r t2">${nf(T.r)}</td>`:`<td class="r t2">${nf(T.r)}</td><td class="r mu">–</td>`}<td class="r">${totCmp}</td></tr></tbody></table></div>
+  <p class="mu xs" style="margin-top:8px">${tonMode=='sess'?'« Vs préc. » : comparaison avec la séance précédente du même type (Upper avec Upper…).':'« Vs sem. −1 » : comparaison avec le même exercice la semaine d’avant.'} <b>Force</b> = évolution moyenne de la force estimée sur les exercices faits des deux côtés : elle ne dépend ni du nombre de séries ni des exercices ajoutés ou retirés. <b>Volume</b> = écart de tonnage brut. Total : semaine d’avant${per}.</p>`
   :`<div class="empty">Aucune série de muscu cette semaine${isCur?' pour l’instant':''}.</div>`}
   ${W.tm.length?`<p class="mu xs" style="margin-top:6px">En durée, non comptés : ${W.tm.map(esc).join(', ')}.</p>`:''}
   <p class="mu sm" style="margin-top:16px">Tonnage des 8 dernières semaines</p>${barChart(weeks,C.red)}
@@ -1535,7 +1561,7 @@ ${vCardio()}
     <div class="panel-h" style="margin-bottom:10px"><button type="button" class="btn quiet icon sm chev open" data-a="sesst" data-id="${se.id}" aria-expanded="true" aria-label="Replier la séance">${ICON.chev}</button><h2 class="sess-title" data-a="sesst" data-id="${se.id}">${esc(se.type)} · ${dLong(se.date)}</h2></div>
     <div class="row sess-tools"><label class="row" style="gap:6px"><span class="mu sm">Pec droit</span><select data-sx="${se.id}|pec" aria-label="État du pec droit">${PEC.map(o=>`<option ${se.pec==o?'selected':''}>${o}</option>`).join('')}</select></label><span class="grow"></span><button class="btn ghost sm" data-a="srecap" data-id="${se.id}">${ICON.copy}Copier le récap</button><button class="btn ghost sm" data-a="dup" data-id="${se.id}" title="Crée la même séance à la date du jour">${ICON.dup}Dupliquer</button><button class="btn danger sm" data-a="delsess" data-id="${se.id}">Supprimer</button></div>
     <input data-sx="${se.id}|note" type="text" style="width:100%;margin-top:12px" placeholder="Note globale : ressenti, énergie, pec…" aria-label="Note de séance" value="${esc(se.note)}">
-    <div class="exlist" style="margin-top:12px">${se.ex.map((e,i)=>{const lp=lastPerf(se,e);return`<div class="ex" data-sid="${se.id}" data-i="${i}"><div class="ex-h"><span class="grip" title="Glisser pour réordonner" aria-hidden="true">⋮⋮</span><b>${esc(e.n)}</b><span class="ex-tools"><button class="btn quiet icon sm" data-a="exmv" data-id="${se.id}" data-i="${i}" data-n="-1" ${i==0?'disabled':''} aria-label="Monter ${esc(e.n)}">↑</button><button class="btn quiet icon sm" data-a="exmv" data-id="${se.id}" data-i="${i}" data-n="1" ${i==se.ex.length-1?'disabled':''} aria-label="Descendre ${esc(e.n)}">↓</button><button class="btn quiet sm" data-a="delex" data-id="${se.id}" data-i="${i}">Retirer</button></span></div>
+    <div class="exlist" style="margin-top:12px">${se.ex.map((e,i)=>{const lp=lastPerf(se,e);return`<div class="ex" data-sid="${se.id}" data-i="${i}"><div class="ex-h"><span class="grip" title="Glisser pour réordonner" aria-hidden="true">⋮⋮</span><b>${esc(e.n)}</b>${isRecord(se,e)?'<span class="pill gold" title="Meilleure force estimée sur cet exercice">Record</span>':''}<span class="ex-tools"><button class="btn quiet icon sm" data-a="exmv" data-id="${se.id}" data-i="${i}" data-n="-1" ${i==0?'disabled':''} aria-label="Monter ${esc(e.n)}">↑</button><button class="btn quiet icon sm" data-a="exmv" data-id="${se.id}" data-i="${i}" data-n="1" ${i==se.ex.length-1?'disabled':''} aria-label="Descendre ${esc(e.n)}">↓</button><button class="btn quiet sm" data-a="delex" data-id="${se.id}" data-i="${i}">Retirer</button></span></div>
       <div class="row ex-opts"><select data-md="${se.id}|${i}" aria-label="Type d’exercice">${[['charge','Charge'],['lest','PDC & lesté'],['temps','Temps']].map(o=>`<option value="${o[0]}" ${e.mode==o[0]?'selected':''}>${o[1]}</option>`).join('')}</select><label class="uni"><input type="checkbox" data-a="uni" data-id="${se.id}" data-i="${i}" ${e.uni?'checked':''}> Unilatéral (par côté)</label></div>${lp?`<p class="mu xs" style="margin-top:6px">${lp}</p>`:''}
       ${e.sets.map((st,j)=>`<div class="set"><span class="n">Série ${j+1}</span>${setFields(se.id,i,j,e.mode,st,e.uni)}<button class="btn quiet icon sm" data-a="delset" data-id="${se.id}" data-i="${i}" data-j="${j}" aria-label="Supprimer la série ${j+1}">${ICON.x}</button></div>`).join('')}
       <div class="row" style="margin-top:10px"><button class="btn ghost sm" data-a="addset" data-id="${se.id}" data-i="${i}">Ajouter une série</button><span class="mu sm" id="sm${se.id}_${i}">${exSum(e)}</span></div>
