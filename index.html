@@ -212,6 +212,34 @@ td{padding:10px 8px 10px 0;border-bottom:1px solid var(--line);font-variant-nume
 tr:last-child td{border-bottom:0}
 td.r,th.r{text-align:right;padding-right:0}
 .tbl{overflow-x:auto}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kpis>div{background:var(--surface);border-radius:12px;padding:10px 12px;min-width:0}
+.kpis span{display:block;font-size:12px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpis b{display:block;font:700 20px/1.2 var(--cond);margin-top:4px;font-variant-numeric:tabular-nums}
+.kpis b.up{color:var(--ok)}.kpis b.down{color:var(--red)}
+.lc{position:relative;height:170px;margin:26px 10px 30px}
+.lc svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.lc-pt{position:absolute;width:9px;height:9px;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 0 2px var(--raise)}
+.lc-v{position:absolute;transform:translate(-50%,-150%);font-size:12px;font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+.lc-v.last{font-weight:800;color:var(--red)}
+.lc-x{position:absolute;bottom:-26px;transform:translateX(-50%);font-size:11.5px;color:var(--mute);white-space:nowrap}
+.bc{display:flex;align-items:stretch;gap:6px;height:150px;margin-top:8px}
+.bc-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-width:0}
+.bc-v{font-size:11.5px;font-weight:600;white-space:nowrap;margin-bottom:4px;font-variant-numeric:tabular-nums}
+.bc-b{width:100%;max-width:44px;border-radius:6px 6px 2px 2px;flex:none}
+.bc-b.cur{opacity:.45}
+.bc-x{font-size:11px;color:var(--mute);margin-top:6px;white-space:nowrap}
+table.ton td:first-child{padding-right:10px}
+table.ton th,table.ton td.r{white-space:nowrap}
+table.ton th.r,table.ton td.r{padding-left:12px}
+table.ton .evo{font-weight:700}table.ton .evo.up{color:var(--ok)}table.ton .evo.down{color:var(--red)}
+table.ton tr.tot td{border-top:2px solid var(--line2);font-weight:700;padding-top:10px}
+table.ton .t1,table.ton .t2,table.ton .t3{border-radius:6px;padding:6px 8px}
+table.ton .t1{background:var(--red-soft);color:var(--red)}
+table.ton .t2{background:var(--gold-soft);color:var(--gold)}
+table.ton .t3{background:var(--gold-soft);color:var(--gold)}
+@media (max-width:520px){.kpis span{white-space:normal;line-height:1.25}.kpis b{font-size:17px}.kpis>div{padding:8px 9px}table.ton{font-size:12.5px}table.ton th{font-size:11.5px}table.ton th.r,table.ton td.r{padding-left:7px}table.ton .t1,table.ton .t2,table.ton .t3{padding:6px 5px}.bc-v{font-size:10px}.bc-x{font-size:10px}}
+
 .pct{display:inline-block;min-width:52px;text-align:right;font-weight:700}
 
 /* Stats grid */
@@ -1387,6 +1415,67 @@ const C={red:'var(--red)',gold:'var(--gold-fill)',mute:'var(--mute)',line:'var(-
 function svgLine(p,c,unit=''){if(!p.length)return'<div class="empty">Pas encore de données.</div>';const W=320,H=110,mx=Math.max(...p.map(a=>a.y)),mi=Math.min(...p.map(a=>a.y)),lo=mi==mx?0:mi-(mx-mi)*.15,X=i=>14+(p.length>1?i*(W-28)/(p.length-1):(W-28)/2),Y=y=>H-20-(y-lo)/Math.max(mx-lo,1e-9)*(H-36);
   return`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Courbe"><polyline fill="none" stroke="${c}" stroke-width="2.5" stroke-linejoin="round" points="${p.map((a,i)=>X(i)+','+Y(a.y)).join(' ')}"/>${p.map((a,i)=>`<circle cx="${X(i)}" cy="${Y(a.y)}" r="4" fill="${c}"><title>${a.x} : ${nf(a.y,1)}${unit}</title></circle>`).join('')}<text x="4" y="${H-4}" font-size="11" fill="currentColor" opacity=".6">${p[0].x}</text><text x="${W-4}" y="${H-4}" font-size="11" fill="currentColor" opacity=".6" text-anchor="end">${p[p.length-1].x} · max ${nf(mx,1)}${unit}</text></svg>`}
 function svgBars(p,ref,unit=''){if(!p.length)return'';const W=320,H=120,w=(W-8)/p.length,mx=Math.max(ref||0,...p.map(a=>a.y),1);return`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Histogramme">${ref?`<line x1="4" x2="${W-4}" y1="${H-20-ref/mx*(H-34)}" y2="${H-20-ref/mx*(H-34)}" stroke="${C.gold}" stroke-dasharray="4 4"/>`:''}${p.map((a,i)=>{const h=a.y/mx*(H-34);return`<rect x="${4+i*w+3}" y="${H-20-h}" width="${Math.max(2,w-6)}" height="${h}" rx="3" fill="${ref&&a.y>=ref?C.gold:C.red}" opacity="${a.y?1:.25}"><title>${a.x} : ${nf(a.y)}${unit}</title></rect><text x="${4+i*w+w/2}" y="${H-5}" font-size="10" fill="currentColor" opacity=".6" text-anchor="middle">${a.x}</text>`}).join('')}</svg>`}
+/* ===== Graphiques lisibles : chiffres écrits, taille de texte fixe ===== */
+/* Courbe : points [{x:'21/11',y:45,t:'45 kg'}] ; le tracé s’étire, les étiquettes restent en HTML */
+function lineChart(p,c){if(!p.length)return'';const mx=Math.max(...p.map(a=>a.y)),mi=Math.min(...p.map(a=>a.y)),lo=mi==mx?mi-1:mi-(mx-mi)*.25,hi=mi==mx?mx+1:mx+(mx-mi)*.1;
+  const X=i=>p.length>1?6+i*88/(p.length-1):50,Y=y=>8+(1-(y-lo)/(hi-lo))*72;
+  return`<div class="lc" role="img" aria-label="${esc(p.map(a=>a.x+' : '+a.t).join(', '))}"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline fill="none" stroke="${c}" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round" points="${p.map((a,i)=>X(i)+','+Y(a.y)).join(' ')}"/></svg>
+  ${p.map((a,i)=>`<span class="lc-pt" style="left:${X(i)}%;top:${Y(a.y)}%;background:${c}"></span><span class="lc-v ${i==p.length-1?'last':''}" style="left:${X(i)}%;top:${Y(a.y)}%">${a.t}</span><span class="lc-x" style="left:${X(i)}%">${a.x}</span>`).join('')}</div>`}
+/* Barres : [{x,y,t,cur}] ; chiffre au-dessus de chaque barre, « – » si vide, semaine en cours plus claire */
+function barChart(p,c){const mx=Math.max(1,...p.map(a=>a.y));return`<div class="bc">${p.map(a=>`<div class="bc-col"><span class="bc-v">${a.y?a.t:'–'}</span><span class="bc-b ${a.cur?'cur':''}" style="height:${a.y?Math.max(4,a.y/mx*100):0}%;background:${c}"></span><span class="bc-x">${a.x}</span></div>`).join('')}</div>`}
+const kgT=v=>v>=1000?nf(v/1000,1)+' t':nf(Math.round(v))+' kg';
+const dlt=(a,b,u='',d=1)=>{const x=a-b;return(x>0?'+':x<0?'−':'±')+nf(Math.abs(x),d)+u};
+const dPct=(a,b)=>b?(a>=b?'+':'−')+Math.round(Math.abs(a-b)/b*100)+' %':'';
+function progPanel(names,occs,cm){
+  const fmt=v=>cm=='lest'?(v?'+'+nf(v,1)+' kg':'PDC'):cm=='temps'?nf(v)+' s':nf(v,1)+' kg';
+  const p=occs.slice(-8).map(a=>{const s=statEx(a.e);return{x:dS(a.z.date),y:s.max,t:fmt(s.max),vol:s.vol,d:a.z.date}});
+  const all=occs.map(a=>({...statEx(a.e),d:a.z.date})),last=all[all.length-1],prev=all[all.length-2];
+  const rec=all.reduce((b,a)=>!b||a.max>b.max||(a.max==b.max&&a.vol>b.vol)?a:b,null);
+  const lbl={charge:['Charge max','Volume (kg × reps)',v=>nf(Math.round(v))+' kg'],lest:['Lest max','Reps totales',v=>nf(v)+' reps'],temps:['Meilleure durée','Durée totale',v=>nf(v)+' s']}[cm];
+  const sel=`<select data-ce aria-label="Exercice">${names.map(n=>`<option ${n==chEx?'selected':''}>${esc(n)}</option>`).join('')}</select>`;
+  const ev=last&&prev?dlt(last.max,prev.max,cm=='temps'?' s':' kg'):'–';
+  if(folded('prog'))return`<section class="panel"><div class="panel-h" style="margin:0">${foldBtn('prog','Progression')}<h2 data-a="fold" data-k="prog" style="cursor:pointer">Progression</h2><span class="mu sm">${last?esc(chEx)+' · '+fmt(last.max)+(prev?' ('+ev+')':''):''}</span></div></section>`;
+  if(!last)return`<section class="panel"><div class="panel-h">${foldBtn('prog','Progression')}<h2>Progression</h2>${sel}</div><div class="empty">Pas encore de séance avec cet exercice.</div></section>`;
+  return`<section class="panel"><div class="panel-h">${foldBtn('prog','Progression')}<h2>Progression</h2>${sel}</div>
+  <div class="kpis"><div><span>Dernière · ${dS(last.d)}</span><b>${fmt(last.max)}</b></div><div><span>Record · ${dS(rec.d)}</span><b>${fmt(rec.max)}</b></div><div><span>Vs précédente</span><b class="${prev?(last.max>prev.max?'up':last.max<prev.max?'down':''):''}">${ev}</b></div></div>
+  ${p.length>1?`<p class="mu sm" style="margin-top:14px">${lbl[0]} par séance${occs.length>8?' (8 dernières)':''}</p>${lineChart(p,C.red)}`:`<p class="mu sm" style="margin-top:14px">Encore une séance avec cet exercice pour voir ta courbe.</p>`}
+  <p class="sm" style="margin-top:12px">${lbl[1]} dernière séance : <b>${lbl[2](last.vol)}</b>${prev&&prev.vol?` <span class="mu">(${dPct(last.vol,prev.vol)} vs séance d’avant)</span>`:''}</p></section>`}
+/* Tonnage d’une semaine, exercice par exercice (exercices en durée à part) */
+function tonWeek(a){const b=add(a,6),m=new Map(),tm=[];S.sessions.filter(z=>z.date>=a&&z.date<=b).sort((x,y)=>x.date.localeCompare(y.date)).forEach(z=>z.ex.forEach(e=>{
+    if(!e.sets.length)return;if(e.mode=='temps'){tm.push(e.n);return}const U=e.uni?2:1,o=m.get(e.n)||{n:e.n,t:0,r:0,s:0};
+    e.sets.forEach(s=>{const r=U*(+s.r||0);o.r+=r;o.s++;o.t+=e.mode=='charge'?U*(+s.w||0)*(+s.r||0):U*((bwAt(z.date)||0)+(s.pdc?0:+s.l||0))*(+s.r||0)});m.set(e.n,o)}));
+  const rows=[...m.values()],T={t:sum(rows.map(o=>o.t)),r:sum(rows.map(o=>o.r)),s:sum(rows.map(o=>o.s))};return{rows,T,tm:[...new Set(tm)]}}
+/* Tonnage d’une séance (mêmes règles) */
+function tonSess(z){let t=0,r=0,n=0;z.ex.forEach(e=>{if(e.mode=='temps')return;const U=e.uni?2:1;e.sets.forEach(s=>{const q=U*(+s.r||0);r+=q;n++;t+=e.mode=='charge'?U*(+s.w||0)*(+s.r||0):U*((bwAt(z.date)||0)+(s.pdc?0:+s.l||0))*(+s.r||0)})});return{t,r,s:n}}
+/* séance précédente du même type (Upper avec Upper…) */
+const prevSame=z=>[...S.sessions].filter(x=>x.type==z.type&&(x.date<z.date||(x.date==z.date&&String(x.id)<String(z.id)))).sort((a,b)=>b.date.localeCompare(a.date)||String(b.id).localeCompare(String(a.id))).find(x=>tonSess(x).r);
+/* même exercice, semaine d’avant */
+const evo=(a,b)=>{if(!b)return'<span class="mu">nouveau</span>';const x=Math.round((a-b)/b*100);return`<span class="evo ${x>0?'up':x<0?'down':''}">${x>0?'+':x<0?'−':'±'}${Math.abs(x)} %</span>`};
+let tonW=null,tonMode='sess';
+/* fenêtres repliables (mémorisées sur l’appareil) */
+const FOLD_KEY='lpos-ui-fold';let FOLD=(()=>{try{return new Set(JSON.parse(localStorage.getItem(FOLD_KEY))||[])}catch(e){return new Set()}})();
+const folded=k=>FOLD.has(k);
+const foldBtn=(k,lab)=>`<button type="button" class="btn quiet icon sm chev ${folded(k)?'':'open'}" data-a="fold" data-k="${k}" aria-expanded="${!folded(k)}" aria-label="${folded(k)?'Déplier':'Replier'} ${lab}">${ICON.chev}</button>`;
+function tonPanel(pec4){const cw=wkStart(TODAY);if(!tonW||tonW>cw)tonW=cw;const W=tonWeek(tonW),P=tonWeek(add(tonW,-7)),kr=o=>o.r?nf(o.t/o.r,1):'–',T=W.T,isCur=tonW==cw;
+  if(folded('ton'))return`<section class="panel"><div class="panel-h" style="margin:0">${foldBtn('ton','Tonnage')}<h2 data-a="fold" data-k="ton" style="cursor:pointer">Tonnage</h2><span class="mu sm">${dMed(tonW)}${isCur?' (en cours)':''} : ${T.r?kgT(T.t)+' · '+nf(T.r)+' reps':'aucune série'}</span></div></section>`;
+  const weeks=[...Array(8)].map((_,i)=>add(tonW,-7*(7-i))).map(w=>{const t=tonWeek(w).T.t;return{x:dS(w),y:t,t:kgT(t),cur:w==cw}});
+  const ss=S.sessions.filter(z=>z.date>=tonW&&z.date<=add(tonW,6)).map(z=>({z,...tonSess(z)})).filter(o=>o.r).sort((a,b)=>a.z.date.localeCompare(b.z.date));
+  const Pm=new Map(P.rows.map(o=>[o.n,o]));
+  const head=`<thead><tr><th>${tonMode=='sess'?'Séance':'Exercice'}</th><th class="r">Tonnage</th><th class="r">Reps</th><th class="r">Kg / rep</th><th class="r">${tonMode=='sess'?'Vs préc.':'Vs sem. −1'}</th></tr></thead>`;
+  const body=tonMode=='sess'
+    ?ss.map(o=>{const pv=prevSame(o.z),pt=pv?tonSess(pv):null;return`<tr><td><b>${esc(o.z.type)}</b><span class="mu" style="display:block">${DJ[pd(o.z.date).getDay()]} ${dS(o.z.date)}</span>${pv?`<span class="mu xs" style="display:block">vs ${dS(pv.date)} : ${kgT(pt.t)}</span>`:''}</td><td class="r">${nf(Math.round(o.t))}</td><td class="r">${nf(o.r)}</td><td class="r">${kr(o)}</td><td class="r">${evo(o.t,pt&&pt.t)}</td></tr>`}).join('')
+    :W.rows.map(o=>{const q=Pm.get(o.n);return`<tr><td>${esc(o.n)}</td><td class="r">${nf(Math.round(o.t))}</td><td class="r">${nf(o.r)}</td><td class="r">${kr(o)}</td><td class="r">${evo(o.t,q&&q.t)}</td></tr>`}).join('');
+  return`<section class="panel"><div class="panel-h">${foldBtn('ton','Tonnage')}<h2>Tonnage</h2><div class="fchips" role="group" aria-label="Affichage"><button class="${tonMode=='sess'?'on':''}" data-a="tonm" data-v="sess">Par séance</button><button class="${tonMode=='ex'?'on':''}" data-a="tonm" data-v="ex">Par exercice</button></div></div>
+  <div class="row" style="margin-bottom:10px"><button class="btn ghost icon sm" data-a="tonw" data-n="-1" aria-label="Semaine précédente">${ICON.prev}</button><b style="flex:1;text-align:center">Semaine du ${dMed(tonW)}${isCur?' · en cours':''}</b><button class="btn ghost icon sm" data-a="tonw" data-n="1" aria-label="Semaine suivante" ${isCur?'disabled':''}>${ICON.next}</button></div>
+  ${W.rows.length?`<div class="tbl"><table class="ton">${head}<tbody>${body}
+  <tr class="tot"><td>Total semaine<span class="mu xs" style="display:block;font-weight:400">${T.s} série${T.s>1?'s':''}</span></td><td class="r t1">${nf(Math.round(T.t))} kg</td><td class="r t2">${nf(T.r)}</td><td class="r t3">${kr(T)}</td><td class="r">${P.T.t?evo(T.t,P.T.t):''}</td></tr></tbody></table></div>
+  <p class="mu xs" style="margin-top:8px">${tonMode=='sess'?'« Vs préc. » : écart de tonnage avec la séance précédente du même type (Upper avec Upper…).':'« Vs sem. −1 » : écart de tonnage avec le même exercice la semaine d’avant.'} Dernière ligne : écart avec la semaine d’avant${isCur?' (semaine en cours, pas encore complète)':''}.</p>`
+  :`<div class="empty">Aucune série de muscu cette semaine${isCur?' pour l’instant':''}.</div>`}
+  ${W.tm.length?`<p class="mu xs" style="margin-top:6px">En durée, non comptés : ${W.tm.map(esc).join(', ')}.</p>`:''}
+  <p class="mu sm" style="margin-top:16px">Tonnage des 8 dernières semaines</p>${barChart(weeks,C.red)}
+  <p class="mu xs" style="margin-top:4px">Tonnage = charge × reps ; pour les exercices au poids du corps : (poids du corps + lest) × reps.</p>
+  <div class="row" style="margin-top:12px"><span class="mu sm">Pec droit, 4 dernières semaines :</span><span class="pill ok">RAS ${pec4.RAS||0}</span><span class="pill gold">Vigilance ${pec4.Vigilance||0}</span><span class="pill red">Gêne ${pec4['Gêne']||0}</span></div></section>`}
+
 
 /* ===== Vue : training ===== */
 let sessMonth=null;
@@ -1435,9 +1524,8 @@ function vTrain(){
 ${vCardio()}
 <div class="blk"><div class="blk-h"><h2>Muscu</h2><span class="mu sm">Séances, progression et charges</span></div>
 <div class="cols">
-  <section class="panel"><div class="panel-h"><h2>Progression</h2><select data-ce aria-label="Exercice">${names.map(n=>`<option ${n==chEx?'selected':''}>${esc(n)}</option>`).join('')}</select></div><p class="mu sm">${LB[0]}</p>${svgLine(p.map(a=>({x:a.x,y:a.max})),C.gold,LB[2])}<p class="mu sm" style="margin-top:10px">${LB[1]}</p>${svgLine(p.map(a=>({x:a.x,y:a.vol})),C.red,LB[3])}</section>
-  <section class="panel"><div class="panel-h"><h2>Charge par semaine</h2><span class="mu sm">8 dernières semaines</span></div><p class="mu sm">Tonnage (charges + poids de corps × reps sur les exercices lestés)</p>${svgBars(wv.map(a=>({x:a.x,y:Math.round(a.vol)})),0,' kg')}<p class="mu sm" style="margin-top:10px">Séries par semaine</p>${svgBars(wv.map(a=>({x:a.x,y:a.sets})),0,' séries')}
-    <div class="row" style="margin-top:12px"><span class="mu sm">Pec droit, 4 dernières semaines :</span><span class="pill ok">RAS ${pec4.RAS||0}</span><span class="pill gold">Vigilance ${pec4.Vigilance||0}</span><span class="pill red">Gêne ${pec4['Gêne']||0}</span></div></section>
+  ${progPanel(names,occs,cm)}
+  ${tonPanel(pec4)}
 </div>
 <section class="panel" style="margin-top:16px"><div class="panel-h"><h2>Nouvelle séance de muscu</h2></div><div class="row"><input type="date" id="sd" value="${cur}" aria-label="Date de la séance"><select id="st" aria-label="Type de séance">${TT.filter(t=>!CX_TYPES.includes(t)).map(t=>`<option>${t}</option>`).join('')}</select><button class="btn" data-a="newsess">Créer la séance</button><button class="btn ghost" data-a="resume" title="Copie la dernière séance du type choisi">${ICON.dup}Reprendre la dernière séance</button></div></section>
 <section class="section" style="margin-top:20px">
@@ -1945,7 +2033,8 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{if(!
 
 
 
-Object.assign(ACT,CX_ACT);
+Object.assign(ACT,CX_ACT,{tonw(q){tonW=add(tonW||wkStart(TODAY),7*+q.n)},tonm(q){tonMode=q.v},
+  fold(q){FOLD.has(q.k)?FOLD.delete(q.k):FOLD.add(q.k);try{localStorage.setItem(FOLD_KEY,JSON.stringify([...FOLD]))}catch(e){}}});
 
 /* ===== Import d’un planning (format du bloc PLANNING) ===== */
 const planWeek=()=>{const w0=wkStart(cur);return[w0,add(w0,6)]};
