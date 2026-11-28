@@ -212,6 +212,7 @@ td{padding:10px 8px 10px 0;border-bottom:1px solid var(--line);font-variant-nume
 tr:last-child td{border-bottom:0}
 td.r,th.r{text-align:right;padding-right:0}
 .tbl{overflow-x:auto}
+.res .src{font-style:normal;color:var(--ok)}.res .src.est{color:var(--gold)}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
 .musl{display:grid;gap:8px}
 .musl{max-width:760px}
@@ -635,6 +636,13 @@ Lapin (cuit)|175|29|0|6.5
 Pintade (rôtie)|170|28|0|6.5
 Caille (rôtie)|190|25|0|10|100
 Foie de volaille (cuit)|165|25|1|6.5
+Haut de cuisse de poulet sans peau (cru)|125|19|0|5.5||||||CIQUAL
+Aiguillettes de poulet (crues)|110|23.5|0|1.5||||||CIQUAL
+Escalope de dinde (cuite)|135|29|0|2||||||CIQUAL
+Haché de dinde (cru)|125|20|0|5||||||CIQUAL
+Haché de poulet (cuit)|170|24|0|8||||||CIQUAL
+Nuggets de poulet (surgelés, cuits au four)|255|15|18|13.5|18||||nugget|CIQUAL
+Cordon bleu de dinde (cuit)|235|14|15|13|100||||pièce|CIQUAL
 # Canard
 Magret de canard (cuit, sans peau)|165|27|0|6
 Magret de canard (cuit, avec peau)|300|21|0|24
@@ -662,6 +670,19 @@ Gigot d’agneau (rôti)|220|27|0|12.5
 Côtelette d’agneau (grillée)|280|26|0|19.5|70
 Foie de veau (cuit)|180|26|4|7
 Cheval (cuit)|135|28|0|2.5
+Escalope de veau (crue)|110|22|0|2.4||||||CIQUAL
+Quasi de veau (cru)|125|21|0|4.5||||||CIQUAL
+Quasi de veau (rôti)|160|28|0|5.4||||||CIQUAL
+Steak haché 5 % (cru)|125|21|0|5|100||||steak|CIQUAL
+Steak haché 10 % (cru)|165|20|0|10|100||||steak|CIQUAL
+Steak haché 10 % (cuit)|200|26|0|10.5|80||||steak|CIQUAL
+Steak haché 15 % (cru)|205|18.5|0|14.5|100||||steak|CIQUAL
+Bavette de bœuf (crue)|135|21|0|5.5||||||CIQUAL
+Rumsteck (cru)|120|22|0|3.5||||||CIQUAL
+Entrecôte (crue)|190|19.5|0|12.5||||||CIQUAL
+Merguez (cuite)|295|16|1.5|25|50||||merguez|CIQUAL
+Kefta / boulettes de bœuf (cuites)|245|19|5|16.5|25||||boulette|CIQUAL
+Carpaccio de bœuf|130|21|0|5.3||||||CIQUAL
 # Porc & charcuterie
 Échine de porc (cuite)|230|26|0|14
 Côte de porc (cuite)|190|28|0|8
@@ -671,18 +692,25 @@ Rôti de porc (cuit)|185|29|0|7.5
 Poitrine de porc (grillée)|380|21|0|33
 Lardons (cuits)|330|18|0.5|29
 Lardons allégés (cuits)|150|20|0.5|7.5
-Jambon blanc|110|19|1|3|40
-Jambon blanc découenné dégraissé|105|20.5|1|2.2|40
-Jambon cru|250|27|0.5|16|15
+Jambon blanc|110|19|1|3|40||||tranche|CIQUAL
+Jambon blanc découenné dégraissé|105|20.5|1|2.2|40||||tranche|CIQUAL
+Jambon cru|250|27|0.5|16|15||||tranche|CIQUAL
 Bacon (filet fumé)|140|22|1|5.5|10
 Saucisse de Toulouse (cuite)|290|18|1|24|110
 Chipolata (cuite)|275|16|1.5|23|50
 Saucisse de Strasbourg|255|12|2|22|35
-Saucisson sec|415|26|2|34
+Saucisson sec|415|26|2|34|8||||tranche|CIQUAL
 Chorizo|430|24|2|36
 Rillettes|420|15|0.5|40
 Pâté de campagne|285|14|1.5|25
 Boudin noir (cuit)|300|12|4|26
+Travers de porc / ribs (cuits)|285|24|0|21||||||CIQUAL
+Rosette|410|24|1.5|34.5|8||||tranche|CIQUAL
+Knacki / saucisse de Francfort|270|12|2|24|35||||saucisse|CIQUAL
+Coppa|365|26|0.5|29|10||||tranche|CIQUAL
+Pancetta|335|17|0.5|29.5|10||||tranche|CIQUAL
+Mortadelle|300|15|1.5|26|15||||tranche|CIQUAL
+Jambon de dinde|105|19|1.5|2.5|30||||tranche|CIQUAL
 # Poissons
 Saumon (cuit)|210|23|0|13
 Saumon (cru)|200|20|0|13.5
@@ -691,7 +719,7 @@ Truite (cuite)|170|25|0|7
 Truite fumée|140|23|0|5|25
 Cabillaud (cuit)|100|22|0|1
 Cabillaud (cru)|80|18|0|0.7
-Colin d’Alaska (cuit)|90|18|0|1.2
+Colin d’Alaska (cuit)|85|18.5|0|1.2
 Merlu (cuit)|100|21|0|1.5
 Lieu noir (cuit)|105|23|0|1.2
 Églefin nature (cuit)|95|21|0|0.8
@@ -699,7 +727,7 @@ Haddock fumé|100|23|0|0.7
 Loup de mer / bar (cuit)|125|23|0|3
 Dorade (cuite)|130|22|0|4.5
 Sole (cuite)|100|21|0|1.5
-Lotte (cuite)|95|20|0|1
+Lotte (cuite)|90|20.5|0|1
 Merlan (cuit)|95|21|0|1
 Thon frais (cuit)|150|31|0|2.5
 Thon au naturel|110|25|0|1
@@ -713,27 +741,34 @@ Hareng fumé|220|20|0|15.5
 Anchois à l’huile|210|29|0|10.5
 Tilapia (cuit)|125|26|0|2.5
 Pangasius (cuit)|90|17|0|2.5
-Espadon (cuit)|155|25|0|5
+Espadon (cuit)|150|25|0|5.5
 Surimi|105|8|15|1.5|15
 Poisson pané (cuit)|210|13|18|9.5|25
+Truite (crue)|140|20|0|6.5||||||CIQUAL
+Colin d’Alaska (cru)|75|16.5|0|0.9||||||CIQUAL
+Maquereau au naturel (conserve, égoutté)|200|21|0|13||||||CIQUAL
+Saumon (pavé, cuit au four)|200|24|0|11.5|125||||pavé|CIQUAL
+Thon albacore (cru)|110|24.5|0|1.3||||||CIQUAL
+Rillettes de thon|245|14|2|20||||||CIQUAL
 # Fruits de mer
 Crevettes cuites|100|21|0|1.5
 Gambas (cuites)|105|22|0|1.5
-Moules cuites|90|17|3|2
+Moules cuites|115|20|4|2.5
 Calamar (cuit)|105|18|3|2
-Poulpe (cuit)|165|30|4|2
+Poulpe (cuit)|160|30|4|2.5
 Noix de Saint-Jacques (cuites)|110|21|3|1|25
 Crabe (chair)|85|18|0.5|1
 Huîtres|70|8|4|2|15
+Crevettes crues|80|18|0|0.8||||||CIQUAL
 # Œufs
-Œuf entier|140|12.5|0.5|10|60
-Œuf dur|128|10.5|0.7|8.8|60
-Œuf mollet|128|10.5|0.7|8.8|60
-Œuf poché|140|12.5|0.5|10|60
-Œuf au plat (filet d’huile)|175|10.5|0.7|14.2|60
+Œuf entier|140|12.5|0.5|10|55||||œuf|CIQUAL
+Œuf dur|135|12.5|0.5|9.2|55||||œuf|CIQUAL
+Œuf mollet|135|12.5|0.5|9.2|55||||œuf|CIQUAL
+Œuf poché|140|12.5|0.5|10|55||||œuf|CIQUAL
+Œuf au plat (filet d’huile)|175|11.5|0.5|14|55||||œuf|CIQUAL
 Œufs brouillés (avec beurre)|165|11|1.5|12.5
 Omelette nature|155|11|0.5|12
-Blancs d’œufs|48|10.5|0.7|0.2|33
+Blancs d’œufs|48|10.5|0.7|0.2|33||||blanc|CIQUAL
 Jaune d’œuf|330|16|0.5|28|18
 Œuf de caille|160|13|0.4|11|10
 # Protéines végétales
@@ -741,15 +776,15 @@ Tofu ferme|145|15|2|8.5
 Tofu soyeux|55|5|2|2.7
 Tofu nature|120|13|2|7
 Tofu fumé|150|16|2|9
-Tempeh|195|19|9|11
+Tempeh|195|19|7|10.5||||||CIQUAL
 Seitan|140|25|5|2
 Edamame (écossés)|120|11|9|5
-Protéines de soja texturées (sèches)|335|50|15|1.5
+Protéines de soja texturées (sèches)|335|50|21|1.5
 Steak végétal au soja|200|16|8|11|100
 # Laitages
 Skyr nature|60|10.5|4|0.2|150
-Skyr aux fruits|85|8.5|11|0.2|150
-Yaourt grec nature|100|8|4|5|125
+Skyr aux fruits|80|8.5|11|0.2|150
+Yaourt grec nature|100|7|4|6.5|125
 Yaourt nature|60|4|5|3|125
 Yaourt nature 0 %|42|4.5|5.5|0.1|125
 Yaourt aux fruits|95|3.5|14|2.5|125
@@ -772,12 +807,16 @@ Lait d’amande|20|0.5|2|1.2||0|lh
 Boisson soja nature|40|3.3|1.5|1.9||0|lh
 Boisson avoine|45|0.6|7|1.3||0|lh
 Lait de coco (cuisine)|180|1.8|3|18||0|l
+Crème liquide légère 4 %|72|2.9|4.5|4.5||0|l|15||CIQUAL
+Lait d’amande sans sucres ajoutés|14|0.5|0.3|1.2||0|lh|||CIQUAL
+Fromage blanc 0 % aux fruits|80|6.5|13|0.2|100||||pot|CIQUAL
+Crème glacée vanille (pot individuel)|200|3.5|24|10|100||||pot|CIQUAL
 # Fromages
-Mozzarella|250|18|1|19|125
+Mozzarella|250|18|1|19|125||||boule|CIQUAL
 Burrata|230|15|2|18|125
 Parmesan|390|33|0|28
 Emmental|380|28|0|29
-Comté|410|27|0|34
+Comté|410|27|0|34|30||||portion|CIQUAL
 Gruyère|405|28|0|33
 Cheddar|405|25|1|34
 Camembert|265|20|0.5|21|30
@@ -786,11 +825,19 @@ Chèvre frais|200|11|3|16
 Bûche de chèvre|300|19|1|25
 Feta|265|15|1|22
 Roquefort|360|19|0.5|31
-Raclette|350|24|0.5|28
+Raclette|350|24|0.5|28|28||||tranche|CIQUAL
 Ricotta|150|8|3.5|11.5
 Mascarpone|430|5|3.5|45
 Fromage frais à tartiner|230|6|3.5|21
 Fromage fondu en portion|250|11|6|20|17
+Emmental râpé|380|28|0|29|10||||c. à soupe|CIQUAL
+Babybel|300|22|0|23.5|20||||mini|CIQUAL
+Reblochon|330|20|0.5|27.5||||||CIQUAL
+Saint-Nectaire|335|22|0.5|27.5||||||CIQUAL
+Fromage à raclette fumé|355|24|0.5|28.5|28||||tranche|CIQUAL
+Boursin ail et fines herbes|405|7|3|41|16||||portion|CIQUAL
+Mozzarella di bufala|265|17|0.5|21.5|125||||boule|CIQUAL
+Halloumi|315|22|2|24.5||||||CIQUAL
 # Féculents
 Nouilles udon sèches|340|10|72|1
 Nouilles soba cuites|100|5|21|0.1
@@ -816,7 +863,7 @@ Pâtes complètes cuites|140|5.5|26|1
 Pâtes fraîches (cuites)|165|6|31|1.8
 Gnocchis (cuits)|150|3.5|32|0.5
 Nouilles de riz cuites|110|1.8|25|0.2
-Nouilles udon cuites|105|2.6|21|0.5
+Nouilles udon cuites|100|2.6|21|0.5
 Nouilles aux œufs cuites|140|4.5|26|1.5
 Vermicelles de soja cuits|85|0.1|21|0
 Quinoa cru|365|14|58|6
@@ -837,6 +884,15 @@ Frites (friteuse)|290|3.5|35|15
 Manioc cuit|160|1.4|38|0.3
 Châtaignes cuites|170|2.5|35|1.5
 Maïs doux (conserve)|90|3|15|1.5
+Riz thaï cru|355|7.5|79|0.6||||||CIQUAL
+Riz thaï cuit|130|2.7|28.5|0.3||||||CIQUAL
+Pâtes blanches crues|355|12.5|71|1.5||||||CIQUAL
+Pâtes blanches cuites|150|5.5|30|1||||||CIQUAL
+Pomme de terre vapeur|80|2|17|0.1||||||CIQUAL
+Pomme de terre au four (avec peau)|95|2.5|19.5|0.1||||||CIQUAL
+Pâtes blanches au beurre (cuites)|190|5.5|30|5||||||CIQUAL
+Riz pilaf / riz cuisiné|155|3|27|3.8||||||CIQUAL
+Potatoes (au four)|190|2.5|24|9||||||CIQUAL
 # Pains & céréales
 Pain complet|250|9|45|3|40
 Baguette|270|9|55|1.2|250
@@ -852,8 +908,8 @@ Biscottes|405|11|74|6|8
 Pain croustillant suédois|350|10|65|2.5|11
 Galette de riz|380|8|80|3|9
 Galette de maïs|385|8|80|2.5|8
-Croissant|420|8|45|22|60
-Pain au chocolat|420|7.5|46|22|70
+Croissant|415|8|45|22|60||||croissant|CIQUAL
+Pain au chocolat|420|7.5|46|22|70||||pain au chocolat|CIQUAL
 Brioche|360|8|50|13
 Flocons d’avoine|370|13|60|7
 Son d’avoine|375|17|50|7
@@ -865,6 +921,16 @@ Céréales chocolatées|390|8|75|5
 Farine de blé|350|10|73|1.2
 Pancake (maison)|230|6.5|30|9|40
 Crêpe nature|220|6.5|27|9|50
+Tranche de baguette|270|9|55|1.2|30||||tranche|CIQUAL
+Pain complet (tranche)|250|9|45|3|35||||tranche|CIQUAL
+Pain aux raisins|330|6|45|14|90||||pain aux raisins|CIQUAL
+Chausson aux pommes|320|4|39|16.5|100||||chausson|CIQUAL
+Pain au lait|350|8.5|52|12|35||||pain au lait|CIQUAL
+Bagel nature|260|10|50|1.5|90||||bagel|CIQUAL
+Naan nature|300|9|50|7|90||||naan|CIQUAL
+Cheese naan|330|10.5|42|13|130||||naan|Estimation
+Galette de sarrasin (crêpe nature)|165|5|33|1.2|60||||galette|CIQUAL
+Gaufre (sucre)|380|6|50|17|60||||gaufre|CIQUAL
 # Légumineuses
 Lentilles crues|330|24|48|1.5
 Lentilles cuites|115|9|20|0.4
@@ -890,7 +956,7 @@ Champignons noirs (réhydratés)|25|0.5|6|0.1
 Radis blanc (daikon)|18|0.6|4|0.1
 Algue nori (feuille)|190|30|12|1.5|2.5
 Snack d’algues nori grillées|540|12|18|45|5
-Wakame (réhydratée)|45|3|9|0.6
+Wakame (réhydratée)|45|3|7|0.6
 Brocolis cuits|35|3|3|0.4
 Brocolis crus|35|3|4|0.4
 Chou-fleur cuit|25|2|3|0.3
@@ -912,7 +978,7 @@ Salade verte|15|1.3|1.5|0.2
 Roquette|25|2.6|2|0.7
 Mâche|20|2|1|0.4
 Endive|17|1|2.5|0.1|100
-Avocat|160|2|2|15|150
+Avocat|160|2|2|15|150||||avocat|CIQUAL
 Aubergine cuite|30|1|5|0.3
 Petits pois cuits|75|5.5|10|0.8
 Oignon|40|1.1|8|0.1|100
@@ -941,16 +1007,21 @@ Poêlée de légumes (surgelée)|50|2|7|1.5
 Ratatouille|60|1.2|5|3.5
 Soupe de légumes|35|1|5|1.2||0|lh
 Gaspacho|40|1|4|2||0|lh
+Haricots verts crus|30|2|4|0.2||||||CIQUAL
+Aubergine crue|20|1|3.5|0.2||||||CIQUAL
+Brocolis (surgelés, cuits)|30|3|2.5|0.4||||||CIQUAL
+Edamame (gousses, surgelés cuits)|120|11|9|5||||||CIQUAL
+Guacamole|150|1.8|5|13.5||||||CIQUAL
 # Fruits
-Banane|90|1.1|20|0.3|120
-Pomme|52|0.3|12|0.2|150
+Banane|90|1.1|20|0.3|120||||banane|CIQUAL
+Pomme|52|0.3|12|0.2|150||||pomme|CIQUAL
 Poire|55|0.4|12.5|0.2|150
-Orange|45|0.9|10|0.2|150
+Orange|45|0.9|10|0.2|150||||orange|CIQUAL
 Clémentine|45|0.8|10|0.2|70
 Pamplemousse|35|0.6|7.5|0.1|300
 Citron|30|0.8|3|0.4|80
 Jus de citron|25|0.4|2.5|0.1||0|l
-Kiwi|55|1.1|12|0.5|75
+Kiwi|55|1.1|12|0.5|75||||kiwi|CIQUAL
 Fraises|33|0.7|6|0.3
 Framboises|45|1.2|7|0.5
 Myrtilles|50|0.7|11|0.3
@@ -972,14 +1043,18 @@ Prune|50|0.7|10.5|0.2|35
 Figue fraîche|70|0.8|16|0.3|50
 Kaki|70|0.6|17|0.2|200
 Grenade|80|1.7|14|1.2
-Datte Medjool|280|2|65|0.2|24
-Datte Deglet Nour|285|2.2|66|0.3|8
+Datte Medjool|280|2|65|0.2|24||||datte|CIQUAL
+Datte Deglet Nour|285|2.2|66|0.3|8||||datte|CIQUAL
 Abricots secs|240|3.5|52|0.5|8
 Pruneaux|240|2.5|55|0.5|10
 Figues sèches|255|3.3|55|1|20
 Raisins secs|300|3|69|0.5
 Cranberries séchées|330|0.1|80|1.4
 Compote sans sucre ajouté|55|0.3|12|0.1|100
+Clémentine (pièce)|45|0.8|10|0.2|70||||clémentine|CIQUAL
+Myrtilles surgelées|50|0.7|11|0.3||||||CIQUAL
+Fruits rouges surgelés|45|1|9|0.4||||||CIQUAL
+Banane séchée|360|3.5|80|1.5||||||CIQUAL
 # Oléagineux & graines
 Amandes|600|21|7|52
 Noix|650|15|7|63
@@ -1000,6 +1075,8 @@ Graines de courge|570|30|7|47
 Graines de tournesol|600|21|12|51
 Noix de coco râpée|660|6|7|65
 Olives|150|1|1|15
+Amandes (poignée ≈ 25 g)|600|21|7|52|25||||poignée|CIQUAL
+Noix de Grenoble (cerneaux)|650|15|7|63|4||||cerneau|CIQUAL
 # Huiles, sauces & condiments
 Sauce soja sucrée (kecap manis)|280|2.5|65|0.5||0|l|18
 Pâte miso|200|12|26|6||||18
@@ -1016,9 +1093,9 @@ Mayonnaise|700|1.3|1.5|76||||15
 Mayonnaise allégée|300|0.8|7|30||||15
 Ketchup|105|1.3|24|0.2||||15
 Moutarde|150|7.5|4|11||||15
-Sauce soja salée|60|8|5|0.1||0|l|16
+Sauce soja salée|60|8|6|0.1||0|l|16
 Sauce nuoc-mâm|35|5|3.5|0||0|l|15
-Sauce teriyaki|90|5|16|0.1||0|l|18
+Sauce teriyaki|88|5|16|0.1||0|l|18
 Sauce huître|50|1.4|11|0.3|||l|18
 Sauce sriracha|95|2|19|1||||15
 Sauce barbecue|160|1|38|0.5||||17
@@ -1031,6 +1108,11 @@ Bouillon (préparé)|5|0.5|0.5|0.2||0|lh
 Cannelle|260|4|55|1.2
 Curcuma|310|10|45|3
 Cacao en poudre non sucré|380|20|13|21
+Sauce blanche kebab|330|1.5|6|33.5|30||||portion|Estimation
+Sauce algérienne|420|1|7|43|25||||portion|Estimation
+Sauce samouraï|440|1|7|45.5|25||||portion|Estimation
+Sauce fromagère (tacos)|186|4.2|5.9|16.2||||||Estimation
+Sauce curry (fast-food)|180|1|20|11|30||||sachet|Estimation
 # Sucres, desserts & snacks
 Miel|320|0.3|79|0||||20
 Sucre blanc|400|0|100|0|5
@@ -1038,7 +1120,7 @@ Sirop d’érable|260|0|67|0.1||0|l|20
 Confiture|245|0.4|60|0.1||||20
 Pâte à tartiner chocolat-noisette|540|6|57|31||||20
 Chocolat noir 70 %|570|8|33|42|10
-Chocolat noir 85 %|590|10|19|48|10
+Chocolat noir 85 %|585|11|19|50|10|||||CIQUAL
 Chocolat noir 99 %|600|12|8|55|10
 Chocolat au lait|545|7|57|31|10
 Barre protéinée|360|33|30|11|60
@@ -1049,6 +1131,34 @@ Gâteau au chocolat|400|5.5|48|20
 Glace vanille|200|3.5|24|10
 Chips|540|6.5|50|34
 Pop-corn salé|480|9|58|22
+Nougat de Montélimar|420|9|60|16|30||||barre|CIQUAL
+Truffe au chocolat|560|5|43|40|12||||truffe|CIQUAL
+Tuile aux amandes|490|7.5|60|24|6||||tuile|CIQUAL
+Tiramisu|290|5|28|17|100||||portion|CIQUAL
+Crème brûlée|300|4.5|24|21|100||||ramequin|CIQUAL
+Éclair au chocolat|265|5.5|32|12.5|80||||éclair|CIQUAL
+Tarte aux pommes|250|3|34|11.5|110||||part|CIQUAL
+Flan pâtissier|180|4.5|28|5.5|100||||part|CIQUAL
+Mousse au chocolat|210|5|21|12|100||||pot|CIQUAL
+Brownie|440|5.5|52|23.5|60||||brownie|CIQUAL
+Muffin au chocolat|420|5.5|50|22|90||||muffin|CIQUAL
+Donut au sucre|400|5|48|21|60||||donut|CIQUAL
+Crêpe au sucre|250|6|35|9.5|60||||crêpe|CIQUAL
+Crêpe Nutella|315|6|40|14.5|80||||crêpe|CIQUAL
+Churros|400|5|45|22|20||||churro|CIQUAL
+Glace type Magnum classic|330|4|29|22|80||u||glace|Estimation
+Chocolat au lait (carré)|545|7|57|31|5||||carré|CIQUAL
+Chocolat noir 70 % (carré)|570|8|33|42|5||||carré|CIQUAL
+Kinder Bueno (barre)|570|8.5|50|37|21.5||||barre|Estimation
+Twix (barre)|495|4.5|65|24|25||||barre|Estimation
+Snickers (barre)|490|8.5|58|24.5|50||||barre|Estimation
+Oreo (biscuit)|475|5|69|19.5|11||||biscuit|Estimation
+Prince chocolat (biscuit)|465|6.5|69|17.5|12.5||||biscuit|Estimation
+Madeleine|440|6|55|21.5|25||||madeleine|CIQUAL
+Pain d’épices|330|4|75|1.5|25||||tranche|CIQUAL
+Bonbons gélifiés|340|6|78|0.2||||||CIQUAL
+Chips (paquet individuel 30 g)|540|6.5|50|34|30||||paquet|CIQUAL
+Cacahuètes grillées salées|610|26|10|51.5||||||CIQUAL
 # Plats courants
 Canard laqué (chair et peau)|250|19|4|17.5
 Poulet teriyaki|165|19|9|5.5
@@ -1062,24 +1172,146 @@ Bao vapeur au porc|240|8|38|6|80
 Bao vapeur nature (mantou)|225|7|46|1.5|60
 Œuf mariné (ajitsuke tamago)|150|12.5|4|9.5|60
 Rouleau de printemps|120|5|19|2.5|90
-Nem (frit)|230|8|20|13|35
-Pizza margherita|240|10|30|8.5
+Nem (frit)|230|8|20|13|35||||nem|CIQUAL
+Pizza margherita|240|10|30|8.5|100||||part (1/6)|CIQUAL
 Lasagnes bolognaise|150|8|14|7
 Quiche lorraine|270|9.5|19|17
 Hamburger (fast-food)|255|13|28|10|110
-Maki / sushi au saumon|160|6|28|2.5|25
+Maki / sushi au saumon|160|6|28|2.5|25||||pièce|CIQUAL
 Riz cantonais|165|5|25|5
 Taboulé|150|3.5|22|5
 Chili con carne|115|8|9|5
 Bœuf bourguignon|140|14|3|8
 Poke bowl saumon|150|8|18|5
 Soupe pho|50|3.5|6|1.2||0|lh
+Couscous royal|150|9|15|6||||||CIQUAL
+Hachis parmentier|130|7|10|7||||||CIQUAL
+Gratin dauphinois|145|3|12|9.5||||||CIQUAL
+Tartiflette|195|8|13|12.5||||||CIQUAL
+Blanquette de veau|125|12|4|7||||||CIQUAL
+Spaghetti carbonara|190|8|20|8.5||||||CIQUAL
+Poulet basquaise|110|12|5|4.5||||||CIQUAL
+Croque-monsieur|255|13|21|13|130||||croque|CIQUAL
+Pizza 4 fromages|270|12|26|13|100||||part (1/6)|CIQUAL
+Pizza pepperoni|270|11.5|27|13|100||||part (1/6)|CIQUAL
+Butter chicken (poulet au beurre)|165|13|5|10.5||||||Estimation
+Poulet curry coco|150|12|4|9.5||||||Estimation
+Pad thaï au poulet|175|9|22|5.5||||||Estimation
+Bœuf loc lac|150|14|8|7||||||Estimation
+Poulet aigre-doux|170|10|18|6.5||||||Estimation
+Nouilles sautées au poulet|160|8|20|5.5||||||Estimation
+Risotto aux champignons|140|3.5|20|5||||||CIQUAL
+Lasagnes (part)|150|8|14|7|300||||part|CIQUAL
+Fondue savoyarde (fromage fondu)|355|23|3|27.5||||||Estimation
+Raclette (assiette : fromage + pommes de terre + charcuterie)|230|12|10|16||||||Estimation
+Galette complète (jambon, œuf, fromage)|220|12|15|12|220||||galette|CIQUAL
+Salade César au poulet|145|10|7|9||||||CIQUAL
+Sandwich jambon-beurre|260|11|35|8.5|200||||sandwich|CIQUAL
+Panini jambon-fromage|265|12|32|10|200||||panini|CIQUAL
+Hot-dog|265|10|26|13.5|150||||hot-dog|CIQUAL
+Wrap poulet crudités|190|11|20|7|200||||wrap|Estimation
+Salade composée (pâtes, thon, crudités)|135|7|15|5||||||CIQUAL
+Couscous poulet|140|10|15|4.5||||||CIQUAL
+Moussaka|140|7|8|9||||||CIQUAL
+Paella|155|9|17|5.5||||||CIQUAL
+Chili sin carne|95|5|12|2.5||||||Estimation
+Soupe miso|25|2|2|1||0|lh|||CIQUAL
+# Fast-Food & Plaisir
+Big Mac (McDo)|530|27|42|27|213||u||burger|McDo FR
+Royal Cheese (McDo)|525|31|37|28|197||u||burger|McDo FR
+McChicken (McDo)|443|19|46|20|181||u||burger|McDo FR
+CBO (McDo)|639|35|50|33|255||u||burger|McDo FR
+Le 280 Original (McDo)|769|41|50|44|295||u||burger|McDo FR
+Big Tasty 1 viande (McDo)|649|33|43|38|260||u||burger|McDo FR
+McCrispy (McDo)|495|25|50|21.5|210||u||burger|McDo FR
+Cheeseburger (McDo)|300|16|31|12|118||u||burger|McDo FR
+Hamburger (McDo)|253|13|31|8.5|104||u||burger|McDo FR
+Double Cheeseburger (McDo)|442|26|32|23|170||u||burger|McDo FR
+Filet-O-Fish (McDo)|329|14|36|14|142||u||burger|McDo FR
+Chicken McNuggets ×6 (McDo)|262|15.5|16|15|102||u||boîte de 6|McDo FR
+Chicken McNuggets ×9 (McDo)|392|23|24|22.5|153||u||boîte de 9|McDo FR
+Chicken McNugget à l’unité (McDo)|43.7|2.6|2.7|2.5|17||u||nugget|McDo FR
+Frites petite portion (McDo)|231|2.7|29|11|80||u||portion|McDo FR
+Frites moyenne portion (McDo)|328|3.8|41|16|114||u||portion|McDo FR
+Frites grande portion (McDo)|434|5|54|21.5|150||u||portion|McDo FR
+Deluxe Potatoes moyenne (McDo)|227|3|28|11|115||u||portion|McDo FR
+Deluxe Potatoes grande (McDo)|330|4.4|41|16|165||u||portion|McDo FR
+McFlurry vanille nature (McDo)|199|5.5|31|6|160||u||pot|McDo FR
+McFlurry Daim (McDo)|327|6.5|47|12.5|180||u||pot|McDo FR
+McFlurry M&M’s (McDo)|322|6.5|47|12|180||u||pot|McDo FR
+McFlurry Kit Kat (McDo)|283|6|41|10.5|175||u||pot|McDo FR
+Sauce Classic Barbecue (McDo)|52|0.3|12|0.2|30||u||sachet|McDo FR
+Sauce Creamy Deluxe (McDo)|79|0.3|2.5|7.6|25||u||sachet|McDo FR
+Sauce Ketchup (McDo)|15|0.2|3.6|0|15||u||sachet|McDo FR
+Sauce Pommes Frites (McDo)|27|0.1|1|2.6|12||u||sachet|McDo FR
+Mayonnaise (sachet)|70|0.1|0.2|7.7|10||u||sachet|CIQUAL
+Coca-Cola moyen 40 cl (McDo)|162|0|40.5|0|400|38|ulh||gobelet|McDo FR
+Hot Wing à l’unité (KFC)|88|6.5|3.5|5.3|30||u||wing|KFC FR
+Hot Wings – portion de 10 (KFC)|880|65|35|53|300||u||portion de 10|KFC FR
+Tender à l’unité (KFC)|146|10.1|7|8.5|45||u||tender|KFC FR
+Colonel Original (KFC)|607|29.5|56.4|30|230||u||burger|KFC FR
+Boxmaster Original (KFC)|686|30.1|59.2|35.7|275||u||wrap|KFC FR
+Frites moyenne portion (KFC)|293|3.5|36|15|110||u||portion|Estimation
+Épi de maïs (KFC)|77|2.6|13|1.5|130||u||épi|Estimation
+Whopper (Burger King)|629|28|49|35|270||u||burger|BK FR
+Double Steakhouse (Burger King)|1134|61|55|74|380||u||burger|BK FR
+Crispy Chicken (Burger King)|551|24|52|27|210||u||burger|Estimation
+Onion Rings ×6 (Burger King)|251|3.5|28|13.5|85||u||portion de 6|BK FR
+King Fries petite portion (Burger King)|239|2.9|29.5|12|85||u||portion|BK FR
+King Fries moyenne portion (Burger King)|309|3.7|38|15.5|110||u||portion|BK FR
+King Fries grande portion (Burger King)|423|5|52|21.5|150||u||portion|BK FR
+Kebab complet pain sauce blanche|750|38|77|32|350||u||kebab|CIQUAL
+Kebab galette (dürüm) sauce blanche|700|37|62|34|330||u||kebab|Estimation
+Kebab pain sans sauce|620|37|74|19|320||u||kebab|Estimation
+French Tacos M (poulet, frites, sauce fromagère)|1180|57|96|62|440||u||tacos|Estimation
+French Tacos L (poulet, frites, sauce fromagère)|1350|65|110|71|520||u||tacos|Estimation
+Pizza margherita entière (≈ 600 g)|1440|60|180|51|600||u||pizza|CIQUAL
+Pizza 4 fromages entière (≈ 600 g)|1620|72|156|78|600||u||pizza|CIQUAL
+Pizza pepperoni entière (≈ 600 g)|1620|69|162|78|600||u||pizza|CIQUAL
+Sushi saumon (nigiri)|47|2.3|7.5|0.9|30||u||sushi|CIQUAL
+Maki saumon|33|1.3|6.2|0.4|22||u||maki|CIQUAL
+California roll saumon-avocat|50|1.4|7.5|1.6|30||u||pièce|Estimation
+Chirashi saumon|640|33|92|16|400||u||bol|Estimation
+Poké bowl saumon|660|34|78|23|450||u||bol|Estimation
+Poké bowl poulet|600|38|76|15|450||u||bol|Estimation
+Ramen tonkotsu|650|30|75|25|600||u||bol|Estimation
+Bo bun bœuf (avec nems)|560|28|72|17|450||u||bol|Estimation
+Chicken McNuggets ×4 (McDo)|174|10.3|10.7|10|68||u||boîte de 4|McDo FR
+Double Big Tasty (McDo)|877|47|44|57|350||u||burger|McDo FR
+Wrap McWrap NY & Poulet Bacon (McDo)|552|26|46|29|250||u||wrap|McDo FR
+Sundae caramel (McDo)|326|6|52|10|175||u||pot|McDo FR
+Croissant (McDo)|204|4|21|11.5|50||u||croissant|McDo FR
+Pain au chocolat (McDo)|277|5|31|14.5|70||u||pain au chocolat|McDo FR
+Coca-Cola petit 25 cl (McDo)|101|0|25.3|0|250|25|ulh||gobelet|McDo FR
+Coca-Cola sans sucres (McDo)|1|0|0|0|400|38|ulh||gobelet|McDo FR
+Tenders – portion de 5 (KFC)|730|50.6|35|42.4|225||u||portion de 5|KFC FR
+Bucket 6 Tenders + 6 Hot Wings (KFC)|1404|99.6|63|83.4|450||u||bucket|Estimation
+Sauce Barbecue (KFC)|60|0.2|14|0.3|30||u||sachet|Estimation
+Big King (Burger King)|482|24|37|26.5|210||u||burger|BK FR
+Cheeseburger (Burger King)|305|16|30|13.5|120||u||burger|BK FR
+King Nuggets ×4 (Burger King)|174|9.5|11|10|65||u||boîte de 4|BK FR
+Steakhouse (Burger King)|829|39|55|50|300||u||burger|BK FR
+Bo bun poulet (avec nems)|540|30|72|14|450||u||bol|Estimation
+Pad thaï crevettes (boîte)|620|26|80|21|380||u||boîte|Estimation
+Riz cantonais (boîte)|560|17|85|17|340||u||boîte|CIQUAL
+Nem au porc (pièce)|80|2.8|7|4.6|35||u||nem|CIQUAL
+Brochette yakitori poulet|70|7|3|3.3|40||u||brochette|Estimation
+Gyoza (pièce)|45|2|5.3|1.6|22||u||gyoza|CIQUAL
+Sushi thon (nigiri)|42|2.6|7|0.3|30||u||sushi|CIQUAL
+Maki concombre|28|0.6|6|0.1|22||u||maki|CIQUAL
+Spring roll saumon-avocat|55|1.6|7|2.2|35||u||pièce|Estimation
+Burger maison (pain, steak 15 %, cheddar, sauce)|620|32|40|36|230||u||burger|Estimation
+Burrito poulet|700|38|80|24|350||u||burrito|Estimation
+Bagel saumon fromage frais|430|20|50|16.5|180||u||bagel|Estimation
+Kebab assiette (viande, frites, salade, sauce)|1000|45|80|55|500||u||assiette|Estimation
+Sandwich américain (steak, frites, sauce)|1100|42|105|56|450||u||sandwich|Estimation
+Panini poulet curry|560|28|62|21|210||u||panini|Estimation
 # Boissons & café / thé
 Café noir / Expresso|5|0|0|0|40|187.5|lh
 Café filtre / allongé|2|0.1|0|0|150|55|lh
 Café au lait (demi-écrémé)|25|1.6|2.4|0.8|250|30|lh
 Cappuccino|35|2|3|1.8|180|40|lh
-Stick de café soluble|200|0|0|0|2|3000
+Stick de café soluble|230|12|43|0.5|2|3000
 Thé vert / Jasmin|1|0|0|0|200|12|lh
 Thé noir|1|0|0.3|0|250|20|lh
 Matcha (poudre)|325|30|39|5|2|3200
@@ -1101,6 +1333,14 @@ Vin rouge|85|0.1|2.5|0|125|0|l
 Vin blanc|80|0.1|2.5|0|125|0|l
 Champagne|80|0.2|1.5|0|100|0|l
 Spiritueux (40 %)|230|0|0|0|40|0|l
+Orangina (canette 33 cl)|38|0|9.2|0|330|0|lh|||CIQUAL
+Ice tea pêche|30|0|7.3|0|330|8|lh|||CIQUAL
+Ice tea sans sucres|1|0|0.2|0|330|8|lh|||CIQUAL
+Red Bull (canette 25 cl)|46|0|11|0|250|32|lh|||Estimation
+Jus d’orange (verre 20 cl)|90|1.4|20|0.2|200|0|ulh||verre|CIQUAL
+Jus de pomme (verre 20 cl)|90|0.2|22|0.2|200|0|ulh||verre|CIQUAL
+Jus d’orange (petit verre 10 cl)|45|0.7|10|0.1|100|0|ulh||verre|CIQUAL
+Milkshake vanille|110|3.5|17|3.2|300|0|lh|||CIQUAL
 # Compléments
 Whey Native Isolate|375|88|3|1|30
 Whey concentrée|390|75|8|6|30
@@ -1119,7 +1359,7 @@ Vitamine C (comprimé)|0|0|0|0|1|0|s
 Multivitamines (comprimé)|0|0|0|0|1|0|s
 Électrolytes (dose)|0|0|0|0|5|0|s
 `;
-const FOODS=(()=>{const m=new Map();let cat='';FOOD_SRC.trim().split('\n').forEach(line=>{line=line.trim();if(!line)return;if(line[0]=='#'){cat=line.slice(1).trim();return}const a=line.split('|'),fl=a[7]||'';m.set(a[0],{n:a[0],k:+a[1]||0,p:+a[2]||0,c:+a[3]||0,f:+a[4]||0,pc:+a[5]||0,caf:+a[6]||0,l:fl.includes('l')?1:0,hy:fl.includes('h')?1:0,sup:fl.includes('s')?1:0,cs:+a[8]||0,cat})});return[...m.values()]})();
+const FOODS=(()=>{const m=new Map();let cat='';FOOD_SRC.trim().split('\n').forEach(line=>{line=line.trim();if(!line)return;if(line[0]=='#'){cat=line.slice(1).trim();return}const a=line.split('|'),fl=a[7]||'';m.set(a[0],{n:a[0],k:+a[1]||0,p:+a[2]||0,c:+a[3]||0,f:+a[4]||0,pc:+a[5]||0,caf:+a[6]||0,l:fl.includes('l')?1:0,hy:fl.includes('h')?1:0,sup:fl.includes('s')?1:0,cs:+a[8]||0,cat,...(fl.includes('u')?{pu:1,ul:a[9]||'unité'}:a[9]?{ul:a[9]}:{}),...(a[10]?{src:a[10]}:{})})});return[...m.values()]})();
 
 /* ===== État ===== */
 const KEY='lpos-v4';
@@ -1203,14 +1443,16 @@ const food=n=>foodMap().get(n)||foodMap().get(FOOD_ALIAS[n]);
 const ufac=(u,f)=>u=='u'?(f.pc||1):u=='L'?1000:u=='pièce'?(f.pc||100):u=='cs'?(f.cs||15):1;
 const amt=(i,f)=>i.q*ufac(i.u,f);
 const units=f=>f.pu?['u',...(f.pc?[f.l?'ml':'g']:[])]:['g',...(f.l?['ml','L']:[]),...(f.cs?['cs']:[]),...(f.pc?['pièce']:[])];
-const uLabel=(u,f)=>u=='u'?(f.ul||'unité')+(f.pc?` (${nf(f.pc,1)} ${f.l?'ml':'g'})`:''):u=='pièce'?`pièce (${nf(f.pc,1)} ${f.l?'ml':'g'})`:u=='cs'?`c. à soupe (${nf(f.cs,1)} ${f.l?'ml':'g'})`:u;
+const uLabel=(u,f)=>u=='u'?(f.ul||'unité')+(f.pc?` (${nf(f.pc,1)} ${f.l?'ml':'g'})`:''):u=='pièce'?`${f.ul||'pièce'} (${nf(f.pc,1)} ${f.l?'ml':'g'})`:u=='cs'?`c. à soupe (${nf(f.cs,1)} ${f.l?'ml':'g'})`:u;
 const defUnit=f=>f.pu?'u':f.pc?'pièce':f.cs?'cs':f.l?'ml':'g';
 const defQty=u=>u=='u'||u=='pièce'||u=='cs'?1:u=='L'?0.5:u=='ml'?250:100;
 function itemMac(i){const f=food(i.n);if(!f)return{k:0,p:0,c:0,f:0,caf:0,ml:0};
   if(f.pu){const n=i.u=='u'?(+i.q||0):(f.pc?(+i.q||0)/f.pc:0);return{k:f.k*n,p:f.p*n,c:f.c*n,f:f.f*n,caf:(f.caf||0)*n,ml:f.hy?n*(f.pc||0):0}}
   const g=amt(i,f),q=g/100;return{k:f.k*q,p:f.p*q,c:f.c*q,f:f.f*q,caf:(f.caf||0)*q,ml:f.hy?g:0}}
 function mac(d){const l=S.logs[d],r={k:0,p:0,c:0,f:0,caf:0,ml:0,sup:{}};(l?l.m:[]).forEach(i=>{const m=itemMac(i);r.k+=m.k;r.p+=m.p;r.c+=m.c;r.f+=m.f;r.caf+=m.caf;r.ml+=m.ml;const f=food(i.n);if(f&&f.sup)r.sup[i.n]=(r.sup[i.n]||0)+amt(i,f)/(f.pc||1)});return r}
-function searchFoods(q){const t=norm(q).split(/\s+/).filter(Boolean);if(!t.length)return[];const out=[];allFoods().forEach(f=>{const n=norm(f.n),c=norm(f.cat);if(t.every(w=>n.includes(w)||c.includes(w))){let sc=0;if(n.startsWith(t[0]))sc-=20;if((' '+n).includes(' '+t[0]))sc-=8;if(f.cat=='Mes aliments')sc-=4;sc+=n.length/20;out.push([sc,f])}});return out.sort((a,b)=>a[0]-b[0]).slice(0,30).map(a=>a[1])}
+let fCat='';
+const foodCats=()=>[...new Set(allFoods().map(f=>f.cat))];
+function searchFoods(q){const t=norm(q).split(/\s+/).filter(Boolean);if(!t.length)return fCat?allFoods().filter(f=>f.cat==fCat).sort((a,b)=>a.n.localeCompare(b.n,'fr')).slice(0,200):[];const out=[];allFoods().forEach(f=>{if(fCat&&f.cat!=fCat)return;const n=norm(f.n),c=norm(f.cat);if(t.every(w=>n.includes(w)||c.includes(w))){let sc=0;if(n.startsWith(t[0]))sc-=20;if((' '+n).includes(' '+t[0]))sc-=8;if(f.cat=='Mes aliments')sc-=4;sc+=n.length/20;out.push([sc,f])}});return out.sort((a,b)=>a[0]-b[0]).slice(0,fCat?200:30).map(a=>a[1])}
 function recentFoods(){const out=[];for(let i=0;i<21&&out.length<8;i++){const l=S.logs[add(TODAY,-i)];if(!l)continue;[...l.m].reverse().forEach(it=>{if(out.length<8&&!out.includes(it.n)&&food(it.n))out.push(it.n)})}return out.map(food)}
 
 /* ===== Journal du jour ===== */
@@ -1337,6 +1579,7 @@ function vNutri(){
 <section class="panel adder" style="margin-top:16px">
   <div class="panel-h"><h2>Ajouter un aliment</h2><span class="mu sm">${allFoods().length} aliments</span></div>
   <div class="search">${ICON.search}<input id="fq" type="search" autocomplete="off" placeholder="Rechercher : poulet, skyr, riz cuit, café…" aria-label="Rechercher un aliment" value="${esc(pick||'')}"><div class="results" id="fres" hidden role="listbox"></div></div>
+  <div class="row" style="margin-top:8px"><select id="fcat" aria-label="Catégorie d’aliments" style="flex:1"><option value="">Toutes les catégories</option>${foodCats().map(c=>`<option ${c==fCat?'selected':''}>${esc(c)}</option>`).join('')}</select></div>
   <div class="addrow">
     <label class="field"><span id="fqtl">Quantité</span><input id="fqt" type="text" data-num autocomplete="off" step="any" min="0" inputmode="decimal" placeholder="100"></label>
     <label class="field"><span>Unité</span><select id="fun"></select></label>
@@ -1375,11 +1618,11 @@ function qtyLabel(){const f=pick?food(pick):null,el=$('#fqtl'),q=$('#fqt');if(!e
 function preview(){const f=pick?food(pick):null,el=$('#fprev');if(!el||!f)return;const qt=+$('#fqt').value||0,x=itemMac({n:pick,q:qt,u:$('#fun').value});
   el.innerHTML=`<span><b>${esc(f.n)}</b> <span class="mu">· ${esc(f.cat)}</span></span><span><b>${nf(x.k)}</b> kcal</span><span>P <b>${nf(x.p,1)}</b> g</span><span>G <b>${nf(x.c,1)}</b> g</span><span>L <b>${nf(x.f,1)}</b> g</span>${x.caf?`<span>Caféine <b>${nf(x.caf)}</b> mg</span>`:''}${x.ml?`<span>Hydratation <b>${nf(x.ml)}</b> ml</span>`:''}`}
 function showResults(){const box=$('#fres'),inpEl=$('#fq');if(!box)return;const q=inpEl.value.trim();let list,head='';
-  if(!q){list=recentFoods();head=list.length?'<div class="resh">Récemment utilisés</div>':''}else list=searchFoods(q);
-  if(!list.length){box.innerHTML=q?`<div class="resh">Aucun aliment trouvé. Crée-le dans « Créer un aliment absent de la base ».</div>`:'';box.hidden=!q;return}
+  if(!q&&!fCat){list=recentFoods();head=list.length?'<div class="resh">Récemment utilisés</div>':''}else{list=searchFoods(q);if(!q)head=`<div class="resh">${esc(fCat)} · ${list.length} aliments</div>`}
+  if(!list.length){box.innerHTML=q||fCat?`<div class="resh">Aucun aliment trouvé. Crée-le dans « Créer un aliment absent de la base ».</div>`:'';box.hidden=!(q||fCat);return}
   resIdx=Math.min(resIdx,list.length-1);
   const hl=n=>{if(!q)return esc(n);const t=norm(q).split(/\s+/).filter(Boolean),nn=norm(n);let out='',i=0;const marks=new Array(n.length).fill(0);t.forEach(w=>{let p=nn.indexOf(w);if(p>=0)for(let k=p;k<p+w.length;k++)marks[k]=1});for(;i<n.length;i++)out+=marks[i]&&!marks[i-1]?'<mark>'+esc(n[i]):(!marks[i]&&marks[i-1]?'</mark>'+esc(n[i]):esc(n[i]));if(marks[n.length-1])out+='</mark>';return out};
-  box.innerHTML=head+list.map((f,i)=>`<button type="button" class="res ${i==resIdx?'act':''}" role="option" data-a="pickf" data-n="${esc(f.n)}"><b>${hl(f.n)}</b><span>${esc(f.cat)} · ${nf(f.k)} kcal · P ${nf(f.p,1)}${f.pu?' pour 1 '+esc(f.ul):f.pc?' · 1 pièce = '+nf(f.pc,1)+(f.l?' ml':' g'):''}</span></button>`).join('');box.hidden=false}
+  box.innerHTML=head+list.map((f,i)=>`<button type="button" class="res ${i==resIdx?'act':''}" role="option" data-a="pickf" data-n="${esc(f.n)}"><b>${hl(f.n)}</b><span>${esc(f.cat)} · ${nf(f.k)} kcal · P ${nf(f.p,1)}${f.pu?' pour 1 '+esc(f.ul)+(f.pc?' (≈ '+nf(f.pc,1)+(f.l?' ml':' g')+')':''):(f.l?' /100 ml':' /100 g')+(f.pc?' · 1 '+esc(f.ul||'pièce')+' = '+nf(f.pc,1)+(f.l?' ml':' g'):'')}${f.src?` · <i class="src ${f.src=='Estimation'?'est':''}">${esc(f.src)}</i>`:''}</span></button>`).join('');box.hidden=false}
 function choose(n){pick=n;addUnit=null;const q=$('#fq');if(q)q.value=n;$('#fres').hidden=true;$('#fqt').value='';fillAdder();const qt=$('#fqt');qt.focus();qt.select()}
 
 /* ===== Training : modèle de données ===== */
@@ -2027,6 +2270,7 @@ function renderKeep(){setTimeout(()=>{const k=focusKey(document.activeElement);r
 document.addEventListener('input',e=>{const t=e.target;if(!t.matches||!t.matches('input[data-num]'))return;const v=t.value;
   let n=v.replace(/,/g,'.').replace(/[^0-9.]/g,'');const i=n.indexOf('.');if(i>=0)n=n.slice(0,i+1)+n.slice(i+1).replace(/\./g,'');
   if(n!==v){const p=Math.max(0,(t.selectionStart??v.length)-(v.length-n.length));t.value=n;try{t.setSelectionRange(p,p)}catch(x){}}},true);
+document.addEventListener('change',e=>{if(e.target.id=='fcat'){fCat=e.target.value;resIdx=0;const q=$('#fq');if(q&&pick){pick=null;q.value='';fillAdder()}showResults()}});
 function crefSync(){const u=$('#cref')&&$('#cref').value=='1',lab=($('#cul')&&$('#cul').value.trim())||'unité';if(!$('#cref'))return;
   document.querySelectorAll('.cu-only').forEach(e=>e.hidden=!u);document.querySelectorAll('.c100-only').forEach(e=>e.hidden=u);
   $('#crefh').textContent=u?`Valeurs pour 1 ${lab} : kcal, protéines, glucides, lipides.`:'Valeurs pour 100 g (ou 100 ml pour un liquide).';
